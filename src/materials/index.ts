@@ -1,7 +1,8 @@
+import type { Component } from 'vue'
 import type { MaterialDefinition, MaterialGroup } from './types'
-export type { MaterialDefinition, MaterialGroup, MaterialLayout, MaterialSchema } from './types'
+// export type { MaterialDefinition, MaterialGroup, MaterialLayout, MaterialSchema } from './types'
 
-export type MaterialRegister = (material: MaterialDefinition) => void
+export type MaterialRegister = (material: MaterialDefinition, component: Component) => void
 
 export interface MaterialModule {
   install: (register: MaterialRegister) => void
@@ -26,10 +27,11 @@ const groups: MaterialGroup[] = [
 ]
 
 const materials: MaterialDefinition[] = []
-
+const componentMap = new Map()
 // 统一注册物料定义，并基于名称去重，避免重复加载同一物料模块。
-export function register(material: MaterialDefinition) {
+export function register(material: MaterialDefinition, component: Component) {
   materials.push(material)
+  componentMap.set(material.schema.type, component)
 }
 
 const materialModules = import.meta.glob<MaterialModule>('./*/index.ts', {
@@ -56,4 +58,16 @@ export function getMaterialsByGroup(group: string) {
 // 根据分组 key 获取分组信息，便于面板展示当前标题。
 export function getMaterialGroup(group: string) {
   return groupMap.get(group)
+}
+
+// 根据 type 获取组件，供画布渲染组件使用
+export function getMaterialComponent(type: string) {
+  return componentMap.get(type)
+}
+// 创建节点函数
+export function createNode(node) {
+  return {
+    ...node,
+    id: crypto.randomUUID(),
+  }
 }

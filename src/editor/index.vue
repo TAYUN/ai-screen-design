@@ -4,6 +4,7 @@ import ToolbarLeft from './toolbar/ToolbarLeft.vue'
 import ToolbarRight from './toolbar/ToolbarRight.vue'
 import MaterialPanel from './panels/material/index.vue'
 import LayerPanel from './panels/layer/index.vue'
+import CanvasRoot from './canvas/index.vue'
 
 defineOptions({
   name: 'ScreenEditor',
@@ -16,7 +17,7 @@ const layerWidth = computed(() => (editStore.panelVisible.layer ? '220px' : 0))
 const propertyWidth = computed(() => (editStore.panelVisible.property ? '260px' : 0))
 </script>
 <template>
-  <div class="editor h-screen">
+  <div class="editor h-screen select-none">
     <header class="header h-56 flex items-center px-20">
       <ToolbarLeft class="w-300" />
       <div class="flex-1 text-center">中</div>
@@ -24,12 +25,14 @@ const propertyWidth = computed(() => (editStore.panelVisible.property ? '260px' 
     </header>
     <main class="h-[calc(100%-56px)] flex">
       <aside class="material overflow-hidden transition-all" :style="{ width: materialWidth }">
-        <MaterialPanel></MaterialPanel>
+        <MaterialPanel />
       </aside>
       <aside class="layer overflow-hidden transition-all" :style="{ width: layerWidth }">
-        <LayerPanel></LayerPanel>
+        <LayerPanel />
       </aside>
-      <div class="canvas flex-1">画布</div>
+      <div class="canvas flex-1">
+        <CanvasRoot />
+      </div>
       <aside class="property overflow-hidden transition-all" :style="{ width: propertyWidth }">
         属性
       </aside>

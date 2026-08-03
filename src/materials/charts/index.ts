@@ -1,4 +1,5 @@
-import type { MaterialDefinition, MaterialModule } from '@/materials'
+import type { MaterialModule } from '@/materials'
+import type { MaterialDefinition } from '../types'
 
 const chartMaterials: MaterialDefinition[] = [
   {
