@@ -1,13 +1,9 @@
 <script setup lang="ts">
-import type { MaterialItem as MaterialData } from '@/materials'
-
 defineOptions({
   name: 'MaterialItem',
 })
 
-defineProps<{
-  material: MaterialData
-}>()
+defineProps(['material'])
 </script>
 
 <template>

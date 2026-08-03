@@ -1,18 +1,7 @@
-export interface MaterialGroup {
-  key: string
-  name: string
-  icon: string
-  // 后续如需支持分组说明、排序、权限控制，可继续在这里扩展字段。
-}
+import type { MaterialDefinition, MaterialGroup } from './types'
+export type { MaterialDefinition, MaterialGroup, MaterialLayout, MaterialSchema } from './types'
 
-export interface MaterialItem {
-  name: string
-  group: MaterialGroup['key']
-  icon: string
-  // 后续如需支持物料描述、标签、组件配置等信息，可继续在这里扩展字段。
-}
-
-export type MaterialRegister = (material: MaterialItem) => void
+export type MaterialRegister = (material: MaterialDefinition) => void
 
 export interface MaterialModule {
   install: (register: MaterialRegister) => void
@@ -36,16 +25,10 @@ const groups: MaterialGroup[] = [
   },
 ]
 
-const materials: MaterialItem[] = []
+const materials: MaterialDefinition[] = []
 
 // 统一注册物料定义，并基于名称去重，避免重复加载同一物料模块。
-export function register(material: MaterialItem) {
-  const exists = materials.some(item => item.name === material.name)
-
-  if (exists) {
-    return
-  }
-
+export function register(material: MaterialDefinition) {
   materials.push(material)
 }
 
