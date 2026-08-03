@@ -6,7 +6,8 @@
  * 1. 渲染画布舞台（canvas-stage），承载所有已添加的组件节点
  * 2. 处理从物料面板拖拽组件到画布上的放置逻辑（onDrop）
  * 3. 处理画布上节点的选中、拖拽移动、缩放等交互（配合 vue3-moveable）
- * 4. 维护当前选中节点的 DOM 引用，供 Moveable 进行拖拽/缩放控制
+ * 4. 支持框选与多选操作（配合 vue3-selecto），可对多个节点进行群组拖拽/缩放
+ * 5. 维护当前选中节点的 DOM 引用，供 Moveable 进行拖拽/缩放控制
  */
 import { createNode, getMaterialComponent } from '@/materials'
 import type { MaterialSchema } from '@/materials/types'
@@ -14,10 +15,11 @@ import { useEditorStore } from '@/stores/editor'
 import { storeToRefs } from 'pinia'
 import Moveable, {
   type OnDrag,
-  type OnDragGroup,
+  type OnDragGroup, // 多选群组拖拽事件类型
   type OnResize,
-  type OnResizeGroup,
+  type OnResizeGroup, // 多选群组缩放事件类型
 } from 'vue3-moveable'
+// Selecto 框选组件：用于在画布上拖拽框选多个节点
 import Selecto from 'vue3-selecto'
 
 // 定义组件名称，便于调试与递归组件识别
@@ -29,14 +31,17 @@ defineOptions({
 const editorStore = useEditorStore()
 
 // 使用 storeToRefs 解构响应式状态，保持响应性（避免直接解构丢失响应式）
+// 这里仅解构 nodes；选中状态（selectedNodeIds）由框选/点击事件直接写入 store
 const { nodes } = storeToRefs(editorStore)
 
 // Moveable 组件的模板引用，用于手动触发拖拽开始等操作
 const moveableRef = useTemplateRef('moveable')
 
+// 画布舞台的模板引用，作为 Selecto 框选的容器与拖拽范围
 const stageRef = useTemplateRef('stage')
 
-// 当前被选中的画布节点 DOM 元素（浅层响应式，避免深层代理开销）
+// Moveable 的目标：单选时为单个节点 DOM 元素，多选框选时为一个 DOM 元素数组
+// （浅层响应式，避免深层代理开销；类型标注为 HTMLElement，实际可能保存数组）
 const selectedTarget = shallowRef<HTMLElement>()
 
 // 获取当前组件实例，用于通过 $el 访问根 DOM 元素
@@ -97,6 +102,11 @@ function onSelect(node: MaterialSchema, e: MouseEvent) {
     moveableRef.value.dragStart(e)
   })
 }
+
+/**
+ * 根据 DOM 元素反向查找对应的画布节点数据
+ * @param element 画布节点 DOM 元素（带有 data-node-id 属性）
+ */
 function getNodeByTarget(element: HTMLElement) {
   const id = element.getAttribute('data-node-id')
   return editorStore.findNode(id)
@@ -110,8 +120,11 @@ function onDrag(e: OnDrag) {
   // 这里记录笔记 为什么这里要手动设置css？为了手动更新
   // 原因：Moveable 默认不直接修改目标元素的样式，需要手动同步位置，
   // 这样能保证 DOM 与 store 数据保持一致，且避免 Moveable 内部缓存导致的位置偏差。
+  // 注意：这里统一使用 e.target 而非 selectedTarget，
+  // 以便单选（目标为单个元素）与多选群组拖拽（遍历每个元素的拖拽事件）都能正确更新对应的 DOM。
   e.target.style.left = e.left + 'px'
   e.target.style.top = e.top + 'px'
+  // 根据被拖拽的 DOM 元素反向查找对应的节点数据
   const node = getNodeByTarget(e.target as HTMLElement)
   // 同步更新 store 中节点的布局数据
   node.layout.x = e.left
@@ -123,9 +136,10 @@ function onDrag(e: OnDrag) {
  * @param e 缩放事件（包含最新的宽高及拖拽信息）
  */
 function onResize(e: OnResize) {
-  // 手动更新目标元素的宽高样式
+  // 手动更新目标元素的宽高样式（同理使用 e.target 以兼容单/多选）
   e.target.style.width = e.width + 'px'
   e.target.style.height = e.height + 'px'
+  // 根据被缩放的 DOM 元素反向查找对应的节点数据
   const node = getNodeByTarget(e.target as HTMLElement)
   // 同步更新 store 中节点的尺寸数据
   node.layout.width = e.width
@@ -144,16 +158,32 @@ function onClearSelected() {
   selectedTarget.value = null
 }
 
+/**
+ * 处理 Selecto 框选结束事件
+ * @param e 框选结束事件（包含最终选中的 DOM 元素列表）
+ */
 function onSelectEnd(e) {
+  // 将框选到的所有 DOM 元素设为 Moveable 的目标（支持多选）
   selectedTarget.value = e.selected
+  // 提取选中元素的节点 id 列表，并同步到 store（支持多选）
   const ids = e.selected.map((element) => element.getAttribute('data-node-id'))
   editorStore.selectedNodeIds = ids
 }
 
+/**
+ * 处理多选群组拖拽事件
+ * 遍历每个元素的拖拽事件，逐个复用 onDrag 同步 DOM 样式与 store 数据
+ * @param e 群组拖拽事件（包含每个元素各自的拖拽信息）
+ */
 function onDragGroup(e: OnDragGroup) {
   e.events.forEach(onDrag)
 }
 
+/**
+ * 处理多选群组缩放事件
+ * 遍历每个元素的缩放事件，逐个复用 onResize 同步 DOM 样式与 store 数据
+ * @param e 群组缩放事件（包含每个元素各自的缩放信息）
+ */
 function onResizeGroup(e: OnResizeGroup) {
   e.events.forEach(onResize)
 }
@@ -182,6 +212,7 @@ function onResizeGroup(e: OnResizeGroup) {
         <component :is="getMaterialComponent(node.type)" :schema="node"></component>
       </div>
     </div>
+    <!-- Selecto 框选组件：支持鼠标拖拽框选多个节点（按住 shift 可追加选择） -->
     <Selecto
       v-if="stageRef"
       :container="stageRef"
@@ -191,7 +222,9 @@ function onResizeGroup(e: OnResizeGroup) {
       :toggleContinueSelect="'shift'"
       @selectEnd="onSelectEnd"
     ></Selecto>
-    <!-- Moveable 交互组件：为选中的节点提供拖拽移动和缩放能力 -->
+    <!-- Moveable 交互组件：为选中的节点提供拖拽移动和缩放能力
+         单选时作用于 target 对应的单个元素；
+         多选（框选）时通过 dragGroup / resizeGroup 对整组元素进行群组拖拽与缩放 -->
     <Moveable
       ref="moveable"
       :target="selectedTarget"
