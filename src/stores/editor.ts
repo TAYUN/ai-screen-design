@@ -20,8 +20,13 @@ export const useEditorStore = defineStore('editor', () => {
   // 画布上的所有组件节点列表
   const nodes = ref<MaterialSchema[]>([])
 
-  // 当前选中节点的 id（null 表示未选中任何节点）
-  const selectedNodeId = ref()
+  // 当前选中节点的 id （length 为 0 表示未选中任何节点）
+  const selectedNodeIds = ref()
+
+  // 当前选中节点的 id（null 表示未选中任何节点 或者 多选情况）
+  const selectedNodeId = computed(() => {
+    return selectedNodeIds.value.length === 1 ? selectedNodeIds.value[0] : null
+  })
 
   // 派生状态：根据 selectedNodeId 从 nodes 中查找当前选中的节点对象
   const selectedNode = computed(() => {
@@ -37,18 +42,29 @@ export const useEditorStore = defineStore('editor', () => {
   }
 
   /**
-   * 选中指定节点
+   * 选中指定节点(单选)
    * @param id 要选中的节点 id
    */
   function selectNode(id: string) {
-    selectedNodeId.value = id
+    selectedNodeIds.value = [id]
+  }
+  /**
+   * 选中的节点（多选）
+   * @param id 要选中的节点 id
+   */
+  function selectNodes(ids: string[]) {
+    selectedNodeIds.value = ids
+  }
+
+  function findNode(id: string) {
+    return nodes.value.find(node => node.id === id)
   }
 
   /**
    * 清除当前选中状态（将 selectedNodeId 置为 null）
    */
   function clearSelected() {
-    selectedNodeId.value = null
+    selectedNodeIds.value = []
   }
 
 
@@ -57,8 +73,11 @@ export const useEditorStore = defineStore('editor', () => {
     nodes,
     selectedNode,
     selectNode,
+    selectNodes,
     selectedNodeId,
+    selectedNodeIds,
     addNode,
+    findNode,
     clearSelected,
   }
 })

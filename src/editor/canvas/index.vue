@@ -12,7 +12,13 @@ import { createNode, getMaterialComponent } from '@/materials'
 import type { MaterialSchema } from '@/materials/types'
 import { useEditorStore } from '@/stores/editor'
 import { storeToRefs } from 'pinia'
-import Moveable, { type OnDrag, type OnResize } from 'vue3-moveable'
+import Moveable, {
+  type OnDrag,
+  type OnDragGroup,
+  type OnResize,
+  type OnResizeGroup,
+} from 'vue3-moveable'
+import Selecto from 'vue3-selecto'
 
 // 定义组件名称，便于调试与递归组件识别
 defineOptions({
@@ -23,10 +29,12 @@ defineOptions({
 const editorStore = useEditorStore()
 
 // 使用 storeToRefs 解构响应式状态，保持响应性（避免直接解构丢失响应式）
-const { nodes, selectedNode } = storeToRefs(editorStore)
+const { nodes } = storeToRefs(editorStore)
 
 // Moveable 组件的模板引用，用于手动触发拖拽开始等操作
 const moveableRef = useTemplateRef('moveable')
+
+const stageRef = useTemplateRef('stage')
 
 // 当前被选中的画布节点 DOM 元素（浅层响应式，避免深层代理开销）
 const selectedTarget = shallowRef<HTMLElement>()
@@ -89,6 +97,10 @@ function onSelect(node: MaterialSchema, e: MouseEvent) {
     moveableRef.value.dragStart(e)
   })
 }
+function getNodeByTarget(element: HTMLElement) {
+  const id = element.getAttribute('data-node-id')
+  return editorStore.findNode(id)
+}
 
 /**
  * 处理 Moveable 拖拽移动事件
@@ -98,12 +110,12 @@ function onDrag(e: OnDrag) {
   // 这里记录笔记 为什么这里要手动设置css？为了手动更新
   // 原因：Moveable 默认不直接修改目标元素的样式，需要手动同步位置，
   // 这样能保证 DOM 与 store 数据保持一致，且避免 Moveable 内部缓存导致的位置偏差。
-  selectedTarget.value.style.left = e.left + 'px'
-  selectedTarget.value.style.top = e.top + 'px'
-
+  e.target.style.left = e.left + 'px'
+  e.target.style.top = e.top + 'px'
+  const node = getNodeByTarget(e.target as HTMLElement)
   // 同步更新 store 中节点的布局数据
-  selectedNode.value.layout.x = e.left
-  selectedNode.value.layout.y = e.top
+  node.layout.x = e.left
+  node.layout.y = e.top
 }
 
 /**
@@ -112,12 +124,12 @@ function onDrag(e: OnDrag) {
  */
 function onResize(e: OnResize) {
   // 手动更新目标元素的宽高样式
-  selectedTarget.value.style.width = e.width + 'px'
-  selectedTarget.value.style.height = e.height + 'px'
-
+  e.target.style.width = e.width + 'px'
+  e.target.style.height = e.height + 'px'
+  const node = getNodeByTarget(e.target as HTMLElement)
   // 同步更新 store 中节点的尺寸数据
-  selectedNode.value.layout.width = e.width
-  selectedNode.value.layout.height = e.height
+  node.layout.width = e.width
+  node.layout.height = e.height
   // 记录这里为什么要调用onDrag？解决往左缩放却往右边缩放不符合预期的问题
   // 原因：缩放时（尤其是从左侧/上侧缩放）会同时改变节点的位置，
   // 调用 onDrag 将缩放产生的位移同步到位置数据，保证缩放行为符合直觉。
@@ -131,12 +143,32 @@ function onClearSelected() {
   editorStore.clearSelected()
   selectedTarget.value = null
 }
+
+function onSelectEnd(e) {
+  selectedTarget.value = e.selected
+  const ids = e.selected.map((element) => element.getAttribute('data-node-id'))
+  editorStore.selectedNodeIds = ids
+}
+
+function onDragGroup(e: OnDragGroup) {
+  e.events.forEach(onDrag)
+}
+
+function onResizeGroup(e: OnResizeGroup) {
+  e.events.forEach(onResize)
+}
 </script>
 
 <template>
   <div class="canvas-root container">
     <!-- 画布舞台：阻止默认拖放行为，接收物料放置，点击空白处清除选中 -->
-    <div class="canvas-stage" @dragover.prevent @drop="onDrop" @mousedown.self="onClearSelected">
+    <div
+      ref="stage"
+      class="canvas-stage"
+      @dragover.prevent
+      @drop="onDrop"
+      @mousedown.self="onClearSelected"
+    >
       <!-- 遍历渲染所有画布节点，按绝对定位摆放 -->
       <div
         class="canvas-node"
@@ -150,6 +182,15 @@ function onClearSelected() {
         <component :is="getMaterialComponent(node.type)" :schema="node"></component>
       </div>
     </div>
+    <Selecto
+      v-if="stageRef"
+      :container="stageRef"
+      :dragContainer="stageRef"
+      :selectableTargets="['.canvas-node']"
+      :selectFromInside="false"
+      :toggleContinueSelect="'shift'"
+      @selectEnd="onSelectEnd"
+    ></Selecto>
     <!-- Moveable 交互组件：为选中的节点提供拖拽移动和缩放能力 -->
     <Moveable
       ref="moveable"
@@ -158,7 +199,9 @@ function onClearSelected() {
       :resizable="true"
       :origin="false"
       @drag="onDrag"
+      @dragGroup="onDragGroup"
       @resize="onResize"
+      @resizeGroup="onResizeGroup"
     ></Moveable>
   </div>
 </template>
