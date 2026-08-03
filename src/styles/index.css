@@ -1,5 +1,42 @@
 @import 'tailwindcss';
+@import './variable.scss';
+@import './global.scss';
 
 @theme {
   --spacing: 1px;
+}
+
+/* Tailwind CSS v4 推荐在 CSS 中直接扩展主题和工具类。 */
+/* 水平和垂直方向同时居中。 */
+@utility center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* 水平方向居中。 */
+@utility center-x {
+  display: flex;
+  justify-content: center;
+}
+
+/* 垂直方向居中。 */
+@utility center-y {
+  display: flex;
+  align-items: center;
+}
+
+/* 两端对齐并保持垂直居中。 */
+@utility between {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+/* 纵向排列并在两个方向上居中。 */
+@utility col-center {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
 }
