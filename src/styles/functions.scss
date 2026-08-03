@@ -1,3 +1,4 @@
-@function bg-mix($value){
-  @return color-mix(in srgb, var(--bg-color) black #{$value + '%'})
+@function bg-mix($value) {
+  // color-mix 的两个颜色参数之间必须用逗号分隔，否则整条样式会失效。
+  @return color-mix(in srgb, var(--bg-color), black #{$value * 1%});
 }
