@@ -1,7 +1,12 @@
 <script setup lang="ts">
+import { useEditorStore } from '@/stores/editor'
+import { storeToRefs } from 'pinia'
+
 defineOptions({
   name: 'LayerPanel',
 })
+const editorStore = useEditorStore()
+const { nodes, selectedNodeIds } = storeToRefs(editorStore)
 </script>
 
 <template>
@@ -11,15 +16,16 @@ defineOptions({
 
       <div class="layer-list">
         <button
-          v-for="layer in 20"
-          :key="layer"
+          v-for="node in nodes"
+          :key="node.id"
           type="button"
-          :class="{ 'layer-item': true, active: false }"
+          :class="{ 'layer-item': true, active: selectedNodeIds.includes(node.id) }"
+          @click="editorStore.selectNode(node.id)"
         >
           <span class="layer-icon">
             <Icon icon="ri:bar-chart-grouped-line" />
           </span>
-          <span class="layer-name">柱状图</span>
+          <span class="layer-name">{{ node.name }}</span>
           <span class="layer-drag">
             <Icon icon="ri:draggable" />
           </span>
@@ -74,7 +80,7 @@ defineOptions({
 
   &.active {
     border-color: rgba(56, 189, 248, 0.4);
-    background: bg-mix(16);
+    background: bg-mix(10);
 
     .layer-icon {
       color: #38bdf8;

@@ -35,7 +35,7 @@ const editorStore = useEditorStore()
 
 // 使用 storeToRefs 解构响应式状态，保持响应性（避免直接解构丢失响应式）
 // 这里仅解构 nodes；选中状态（selectedNodeIds）由框选/点击事件直接写入 store
-const { nodes } = storeToRefs(editorStore)
+const { nodes, selectedNodeIds } = storeToRefs(editorStore)
 
 // Moveable 组件的模板引用，用于手动触发拖拽开始等操作
 const moveableRef = useTemplateRef('moveable')
@@ -47,7 +47,7 @@ const canvasRootRef = useTemplateRef('canvasRoot')
 
 // Moveable 的目标：单选时为单个节点 DOM 元素，多选框选时为一个 DOM 元素数组
 // （浅层响应式，避免深层代理开销；类型标注为 HTMLElement，实际可能保存数组）
-const selectedTarget = shallowRef<HTMLElement>()
+const selectedTarget = shallowRef<HTMLElement[]>()
 const scale = ref(1)
 const lines = ref({ h: [], v: [] })
 
@@ -79,6 +79,16 @@ const palette = {
   hoverColor: '#ffffff',
 }
 
+watch(
+  selectedNodeIds,
+  (ids) => {
+    selectedTarget.value = ids.map((id) => {
+      return stageRef.value.querySelector(`[data-node-id='${id}']`)
+    })
+  },
+  { deep: true, flush: 'post' },
+)
+
 const onRootResize = debounce((rect) => {
   rectWidth.value = rect.width
   rectHeight.value = rect.height
@@ -103,7 +113,7 @@ onMounted(() => {
 })
 
 // 获取当前组件实例，用于通过 $el 访问根 DOM 元素
-const vm = getCurrentInstance()
+// const vm = getCurrentInstance()
 
 /**
  * 处理物料拖拽到画布上的放置事件
@@ -122,9 +132,9 @@ function onDrop(e: DragEvent) {
   // 开启放入就选中：放置后立即选中该节点
   editorStore.selectNode(node.id)
   // 等待 DOM 渲染完成后，获取新节点的 DOM 元素并设为 Moveable 的目标
-  nextTick(() => {
-    selectedTarget.value = vm.proxy.$el.querySelector(`[data-node-id='${node.id}']`)
-  })
+  // nextTick(() => {
+  //   selectedTarget.value = vm.proxy.$el.querySelector(`[data-node-id='${node.id}']`)
+  // })
 }
 
 /**
@@ -150,7 +160,7 @@ function onSelect(node: MaterialSchema, e: MouseEvent) {
   // 这里记一下笔记为什么用e.currentTarget 而不是 e.target，为什么要断言
   // 原因：e.target 可能是节点内部的子元素，而 e.currentTarget 始终是绑定事件的节点本身；
   // 断言为 HTMLElement 是因为 currentTarget 的类型是 EventTarget，需要手动收窄类型。
-  selectedTarget.value = e.currentTarget as HTMLElement
+  // selectedTarget.value = e.currentTarget as HTMLElement
   // 更新 store 中选中的节点 id
   editorStore.selectNode(node.id)
 
@@ -213,7 +223,6 @@ function onResize(e: OnResize) {
  */
 function onClearSelected() {
   editorStore.clearSelected()
-  selectedTarget.value = null
 }
 
 /**
@@ -221,8 +230,6 @@ function onClearSelected() {
  * @param e 框选结束事件（包含最终选中的 DOM 元素列表）
  */
 function onSelectEnd(e) {
-  // 将框选到的所有 DOM 元素设为 Moveable 的目标（支持多选）
-  selectedTarget.value = e.selected
   // 提取选中元素的节点 id 列表，并同步到 store（支持多选）
   const ids = e.selected.map((element) => element.getAttribute('data-node-id'))
   editorStore.selectedNodeIds = ids
