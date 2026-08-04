@@ -9,7 +9,7 @@ defineOptions({
 const editorStore = useEditorStore()
 const { nodes, selectedNodeIds } = storeToRefs(editorStore)
 
-useDraggable('.layer-list', nodes, { animation: 150 })
+useDraggable('.layer-list', nodes, { animation: 150, direction: 'horizontal' })
 </script>
 
 <template>
@@ -19,7 +19,7 @@ useDraggable('.layer-list', nodes, { animation: 150 })
 
       <div class="layer-list">
         <button
-          v-for="node in nodes"
+          v-for="(node, index) in nodes"
           :key="node.id"
           type="button"
           :class="{ 'layer-item': true, active: selectedNodeIds.includes(node.id) }"
@@ -56,7 +56,8 @@ useDraggable('.layer-list', nodes, { animation: 150 })
   flex: 1;
   padding: 12px;
   display: flex;
-  flex-direction: column;
+  flex-direction: column-reverse;
+  justify-content: flex-end;
   gap: 8px;
   overflow-y: auto;
 }

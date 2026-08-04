@@ -142,12 +142,13 @@ function onDrop(e: DragEvent) {
  * @param node 物料节点 schema
  * @returns 包含宽高和左上角坐标的样式对象
  */
-function getNodeStyle(node: MaterialSchema) {
+function getNodeStyle(node: MaterialSchema, index: number) {
   return {
     width: node.layout.width + 'px',
     height: node.layout.height + 'px',
     left: node.layout.x + 'px',
     top: node.layout.y + 'px',
+    zIndex: index + 1,
   }
 }
 
@@ -283,9 +284,9 @@ function onZoomChange() {
         <!-- 遍历渲染所有画布节点，按绝对定位摆放 -->
         <div
           class="canvas-node"
-          v-for="node in nodes"
+          v-for="(node, index) in nodes"
           :key="node.id"
-          :style="getNodeStyle(node)"
+          :style="getNodeStyle(node, index)"
           :data-node-id="node.id"
           @mousedown="onSelect(node, $event)"
         >
