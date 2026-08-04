@@ -12,6 +12,7 @@
 import { createNode, getMaterialComponent } from '@/materials'
 import type { MaterialSchema } from '@/materials/types'
 import { useEditorStore } from '@/stores/editor'
+import { debounce } from '@/utils'
 import { storeToRefs } from 'pinia'
 import Moveable, {
   type OnDrag,
@@ -21,6 +22,8 @@ import Moveable, {
 } from 'vue3-moveable'
 // Selecto 框选组件：用于在画布上拖拽框选多个节点
 import Selecto from 'vue3-selecto'
+import SketchRuler from 'vue3-sketch-ruler'
+import 'vue3-sketch-ruler/lib/style.css'
 
 // 定义组件名称，便于调试与递归组件识别
 defineOptions({
@@ -40,9 +43,64 @@ const moveableRef = useTemplateRef('moveable')
 // 画布舞台的模板引用，作为 Selecto 框选的容器与拖拽范围
 const stageRef = useTemplateRef('stage')
 
+const canvasRootRef = useTemplateRef('canvasRoot')
+
 // Moveable 的目标：单选时为单个节点 DOM 元素，多选框选时为一个 DOM 元素数组
 // （浅层响应式，避免深层代理开销；类型标注为 HTMLElement，实际可能保存数组）
 const selectedTarget = shallowRef<HTMLElement>()
+const scale = ref(1)
+const lines = ref({ h: [], v: [] })
+
+const rectWidth = ref(1000)
+const rectHeight = ref(800)
+
+const canvasWidth = ref(1920)
+const canvasHeight = ref(1080)
+
+const canvasStyle = computed(() => {
+  return {
+    width: canvasWidth.value + 'px',
+    height: canvasHeight.value + 'px',
+  }
+})
+
+// 标尺样式
+const palette = {
+  bgColor: '#1f2937',
+  longfgColor: '#6b7280',
+  fontColor: '#9ca3af',
+  fontShadowColor: '#0e8da7',
+  shadowColor: 'rgba(14, 141, 167, 0.14)',
+  lineColor: '#22c55e',
+  lineType: 'solid',
+  lockLineColor: '#4b5563',
+  borderColor: '#374151',
+  hoverBg: '#111827',
+  hoverColor: '#ffffff',
+}
+
+const onRootResize = debounce((rect) => {
+  rectWidth.value = rect.width
+  rectHeight.value = rect.height
+}, 300)
+
+onMounted(() => {
+  const { width, height } = canvasRootRef.value.getBoundingClientRect()
+  rectWidth.value = width
+  rectHeight.value = height
+
+  const ob = new ResizeObserver((entries) => {
+    const entry = entries[0]
+    const rect = entry.contentRect
+    onRootResize(rect)
+  })
+
+  ob.observe(canvasRootRef.value)
+
+  onUnmounted(() => {
+    ob.disconnect()
+  })
+})
 
 // 获取当前组件实例，用于通过 $el 访问根 DOM 元素
 const vm = getCurrentInstance()
@@ -187,31 +245,49 @@ function onDragGroup(e: OnDragGroup) {
 function onResizeGroup(e: OnResizeGroup) {
   e.events.forEach(onResize)
 }
+
+function onZoomChange() {
+  moveableRef.value.updateRect()
+}
 </script>
 
 <template>
-  <div class="canvas-root container">
-    <!-- 画布舞台：阻止默认拖放行为，接收物料放置，点击空白处清除选中 -->
-    <div
-      ref="stage"
-      class="canvas-stage"
-      @dragover.prevent
-      @drop="onDrop"
-      @mousedown.self="onClearSelected"
+  <div ref="canvasRoot" class="canvas-root container">
+    <SketchRuler
+      :scale="scale"
+      :thick="20"
+      :palette="palette"
+      :width="rectWidth"
+      :height="rectHeight"
+      :canvasWidth="canvasWidth"
+      :canvasHeight="canvasHeight"
+      :lines="lines"
+      @zoomchange="onZoomChange"
     >
-      <!-- 遍历渲染所有画布节点，按绝对定位摆放 -->
+      <!-- 画布舞台：阻止默认拖放行为，接收物料放置，点击空白处清除选中 -->
       <div
-        class="canvas-node"
-        v-for="node in nodes"
-        :key="node.id"
-        :style="getNodeStyle(node)"
-        :data-node-id="node.id"
-        @mousedown="onSelect(node, $event)"
+        ref="stage"
+        class="canvas-stage"
+        :style="canvasStyle"
+        @dragover.prevent
+        @drop="onDrop"
+        @mousedown.self="onClearSelected"
       >
-        <!-- 根据节点类型动态渲染对应的物料组件 -->
-        <component :is="getMaterialComponent(node.type)" :schema="node"></component>
+        <!-- 遍历渲染所有画布节点，按绝对定位摆放 -->
+        <div
+          class="canvas-node"
+          v-for="node in nodes"
+          :key="node.id"
+          :style="getNodeStyle(node)"
+          :data-node-id="node.id"
+          @mousedown="onSelect(node, $event)"
+        >
+          <!-- 根据节点类型动态渲染对应的物料组件 -->
+          <component :is="getMaterialComponent(node.type)" :schema="node"></component>
+        </div>
       </div>
-    </div>
+    </SketchRuler>
+
     <!-- Selecto 框选组件：支持鼠标拖拽框选多个节点（按住 shift 可追加选择） -->
     <Selecto
       v-if="stageRef"
@@ -241,12 +317,10 @@ function onResizeGroup(e: OnResizeGroup) {
 
 <style scoped lang="scss">
 .canvas-root {
+  height: 100%;
   .canvas-stage {
     position: relative;
-    width: 900px;
-    height: 600px;
     background: bg-mix(40);
-    margin: 100px;
     .canvas-node {
       position: absolute;
     }
