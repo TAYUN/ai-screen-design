@@ -1,12 +1,15 @@
 <script setup lang="ts">
 import { useEditorStore } from '@/stores/editor'
 import { storeToRefs } from 'pinia'
+import { useDraggable } from 'vue-draggable-plus'
 
 defineOptions({
   name: 'LayerPanel',
 })
 const editorStore = useEditorStore()
 const { nodes, selectedNodeIds } = storeToRefs(editorStore)
+
+useDraggable('.layer-list', nodes, { animation: 150 })
 </script>
 
 <template>
