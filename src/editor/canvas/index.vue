@@ -10,7 +10,7 @@
  * 5. 维护当前选中节点的 DOM 引用，供 Moveable 进行拖拽/缩放控制
  */
 import { createNode, getMaterialComponent } from '@/materials'
-import type { MaterialSchema } from '@/materials/types'
+import type { MaterialSchema } from '@/schema/material'
 import { useEditorStore } from '@/stores/editor'
 import { debounce } from '@/utils'
 import { storeToRefs } from 'pinia'
@@ -35,7 +35,7 @@ const editorStore = useEditorStore()
 
 // 使用 storeToRefs 解构响应式状态，保持响应性（避免直接解构丢失响应式）
 // 这里仅解构 nodes；选中状态（selectedNodeIds）由框选/点击事件直接写入 store
-const { nodes, selectedNodeIds } = storeToRefs(editorStore)
+const { nodes, selectedNodeIds, canvas } = storeToRefs(editorStore)
 
 // Moveable 组件的模板引用，用于手动触发拖拽开始等操作
 const moveableRef = useTemplateRef('moveable')
@@ -54,13 +54,14 @@ const lines = ref({ h: [], v: [] })
 const rectWidth = ref(1000)
 const rectHeight = ref(800)
 
-const canvasWidth = ref(1920)
-const canvasHeight = ref(1080)
+const canvasWidth = toRef(canvas.value, 'width')
+const canvasHeight = toRef(canvas.value, 'height')
 
 const canvasStyle = computed(() => {
   return {
     width: canvasWidth.value + 'px',
     height: canvasHeight.value + 'px',
+    backgroundColor: canvas.value.backgroundColor,
   }
 })
 
@@ -328,7 +329,6 @@ function onZoomChange() {
   height: 100%;
   .canvas-stage {
     position: relative;
-    background: bg-mix(40);
     .canvas-node {
       position: absolute;
     }
