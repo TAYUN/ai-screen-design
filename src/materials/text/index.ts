@@ -1,6 +1,6 @@
 
 import type { MaterialModule } from '@/materials'
-import type { MaterialDefinition } from '../types'
+import type { MaterialDefinition } from '@/schema/material.ts'
 import TextMaterial from './component.vue'
 // 文本物料直接提供默认节点 DSL，后续拖入画布时可直接作为初始状态。
 const textMaterial: MaterialDefinition = {

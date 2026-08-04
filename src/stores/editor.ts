@@ -1,4 +1,5 @@
-import type { MaterialSchema } from "@/materials/types";
+import type { MaterialSchema } from "@/schema/material";
+import { type PageSchema } from "@/schema/page";
 import { defineStore } from "pinia";
 
 /**
@@ -18,11 +19,21 @@ export const useEditorStore = defineStore('editor', () => {
     property: true,
   })
 
+  const page = ref<PageSchema>({
+    canvas: {
+      width: 1920,
+      height: 1080,
+      backgroundColor: '#0d121b'
+    },
+    nodes: [],
+  })
+
+  const canvas = toRef(page.value, 'canvas')
   // 画布上的所有组件节点列表
-  const nodes = ref<MaterialSchema[]>([])
+  const nodes = toRef(page.value, 'nodes')
 
   // 当前选中节点的 id 列表（数组为空 [] 表示未选中任何节点；支持多选）
-  const selectedNodeIds = ref()
+  const selectedNodeIds = ref<string[]>([])
 
   // 当前"单选"场景下的节点 id：仅当选中 id 列表长度为 1 时返回该 id，否则返回 null
   // （null 表示未选中任何节点，或者当前处于多选状态）
@@ -77,7 +88,9 @@ export const useEditorStore = defineStore('editor', () => {
 
   return {
     panelVisible,
+    page,
     nodes,
+    canvas,
     selectedNode,
     selectNode,
     selectNodes,

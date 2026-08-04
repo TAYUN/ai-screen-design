@@ -1,5 +1,5 @@
 import type { Component } from 'vue'
-import type { MaterialDefinition, MaterialGroup } from './types'
+import type { MaterialDefinition, MaterialGroup } from '@/schema/material'
 // export type { MaterialDefinition, MaterialGroup, MaterialLayout, MaterialSchema } from './types'
 
 export type MaterialRegister = (material: MaterialDefinition, component: Component) => void
