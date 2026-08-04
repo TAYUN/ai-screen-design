@@ -19,7 +19,7 @@ useDraggable('.layer-list', nodes, { animation: 150, direction: 'horizontal' })
 
       <div class="layer-list">
         <button
-          v-for="(node, index) in nodes"
+          v-for="node in nodes"
           :key="node.id"
           type="button"
           :class="{ 'layer-item': true, active: selectedNodeIds.includes(node.id) }"
