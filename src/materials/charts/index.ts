@@ -6,6 +6,7 @@ const chartMaterials: MaterialDefinition[] = [
     name: '柱状图',
     group: 'charts',
     icon: 'ri:bar-chart-box-line',
+    setters: [],
     schema: {
       type: 'bar-chart',
       name: '柱状图',
@@ -89,6 +90,7 @@ const chartMaterials: MaterialDefinition[] = [
     name: '折线图',
     group: 'charts',
     icon: 'ri:line-chart-line',
+    setters: [],
     schema: {
       type: 'line-chart',
       name: '折线图',
@@ -157,77 +159,6 @@ const chartMaterials: MaterialDefinition[] = [
               areaStyle: {
                 color: 'rgba(96, 165, 250, 0.16)',
               },
-            },
-          ],
-        },
-      },
-    },
-  },
-  {
-    name: '饼图',
-    group: 'charts',
-    icon: 'ri:pie-chart-2-line',
-    schema: {
-      type: 'pie-chart',
-      name: '饼图',
-      layout: {
-        x: 0,
-        y: 0,
-        width: 360,
-        height: 280,
-      },
-      style: {},
-      props: {
-        option: {
-          backgroundColor: 'transparent',
-          tooltip: {
-            trigger: 'item',
-          },
-          legend: {
-            bottom: 8,
-            textStyle: {
-              color: '#CBD5E1',
-            },
-          },
-          series: [
-            {
-              name: '流量来源',
-              type: 'pie',
-              radius: ['42%', '70%'],
-              center: ['50%', '46%'],
-              label: {
-                color: '#E2E8F0',
-              },
-              data: [
-                {
-                  value: 46,
-                  name: '自然流量',
-                  itemStyle: {
-                    color: '#38BDF8',
-                  },
-                },
-                {
-                  value: 28,
-                  name: '广告投放',
-                  itemStyle: {
-                    color: '#F97316',
-                  },
-                },
-                {
-                  value: 18,
-                  name: '社交分享',
-                  itemStyle: {
-                    color: '#A855F7',
-                  },
-                },
-                {
-                  value: 8,
-                  name: '其他',
-                  itemStyle: {
-                    color: '#22C55E',
-                  },
-                },
-              ],
             },
           ],
         },
