@@ -12,18 +12,15 @@
 import { createNode, getMaterialComponent } from '@/materials'
 import type { MaterialSchema } from '@/schema/material'
 import { useEditorStore } from '@/stores/editor'
-import { debounce } from '@/utils'
 import { storeToRefs } from 'pinia'
-import Moveable, {
-  type OnDrag,
-  type OnDragGroup, // 多选群组拖拽事件类型
-  type OnResize,
-  type OnResizeGroup, // 多选群组缩放事件类型
-} from 'vue3-moveable'
+import Moveable from 'vue3-moveable'
 // Selecto 框选组件：用于在画布上拖拽框选多个节点
 import Selecto from 'vue3-selecto'
 import SketchRuler from 'vue3-sketch-ruler'
 import 'vue3-sketch-ruler/lib/style.css'
+import { useCanvasRuler } from './composables/useCanvasRuler'
+import { useMoveable } from './composables/useMoveable'
+import { useSelection } from './composables/useSelection'
 
 // 定义组件名称，便于调试与递归组件识别
 defineOptions({
@@ -35,7 +32,7 @@ const editorStore = useEditorStore()
 
 // 使用 storeToRefs 解构响应式状态，保持响应性（避免直接解构丢失响应式）
 // 这里仅解构 nodes；选中状态（selectedNodeIds）由框选/点击事件直接写入 store
-const { nodes, selectedNodeIds, canvas } = storeToRefs(editorStore)
+const { nodes } = storeToRefs(editorStore)
 
 // Moveable 组件的模板引用，用于手动触发拖拽开始等操作
 const moveableRef = useTemplateRef('moveable')
@@ -48,71 +45,23 @@ const canvasRootRef = useTemplateRef('canvasRoot')
 // Moveable 的目标：单选时为单个节点 DOM 元素，多选框选时为一个 DOM 元素数组
 // （浅层响应式，避免深层代理开销；类型标注为 HTMLElement，实际可能保存数组）
 const selectedTarget = shallowRef<HTMLElement[]>()
-const scale = ref(1)
-const lines = ref({ h: [], v: [] })
-
-const rectWidth = ref(1000)
-const rectHeight = ref(800)
-
-const canvasWidth = toRef(canvas.value, 'width')
-const canvasHeight = toRef(canvas.value, 'height')
-
-const canvasStyle = computed(() => {
-  return {
-    width: canvasWidth.value + 'px',
-    height: canvasHeight.value + 'px',
-    backgroundColor: canvas.value.backgroundColor,
-  }
+const {
+  scale,
+  lines,
+  rectWidth,
+  rectHeight,
+  canvasWidth,
+  canvasHeight,
+  canvasStyle,
+  palette,
+  onZoomChange,
+} = useCanvasRuler({ moveableRef, canvasRootRef })
+const { onSelect, onClearSelected, onSelectEnd } = useSelection({
+  stageRef,
+  moveableRef,
+  selectedTarget,
 })
-
-// 标尺样式
-const palette = {
-  bgColor: '#1f2937',
-  longfgColor: '#6b7280',
-  fontColor: '#9ca3af',
-  fontShadowColor: '#0e8da7',
-  shadowColor: 'rgba(14, 141, 167, 0.14)',
-  lineColor: '#22c55e',
-  lineType: 'solid',
-  lockLineColor: '#4b5563',
-  borderColor: '#374151',
-  hoverBg: '#111827',
-  hoverColor: '#ffffff',
-}
-
-watch(
-  selectedNodeIds,
-  (ids) => {
-    selectedTarget.value = ids.map((id) => {
-      // 排除锁定的
-      return stageRef.value.querySelector(`[data-node-id='${id}']:not([data-node-locked='true'])`)
-    })
-  },
-  { deep: true, flush: 'post' },
-)
-
-const onRootResize = debounce((rect) => {
-  rectWidth.value = rect.width
-  rectHeight.value = rect.height
-}, 300)
-
-onMounted(() => {
-  const { width, height } = canvasRootRef.value.getBoundingClientRect()
-  rectWidth.value = width
-  rectHeight.value = height
-
-  const ob = new ResizeObserver((entries) => {
-    const entry = entries[0]
-    const rect = entry.contentRect
-    onRootResize(rect)
-  })
-
-  ob.observe(canvasRootRef.value)
-
-  onUnmounted(() => {
-    ob.disconnect()
-  })
-})
+const { onDrag, onResize, onDragGroup, onResizeGroup } = useMoveable()
 
 // 获取当前组件实例，用于通过 $el 访问根 DOM 元素
 // const vm = getCurrentInstance()
@@ -152,112 +101,6 @@ function getNodeStyle(node: MaterialSchema, index: number) {
     top: node.layout.y + 'px',
     zIndex: index + 1,
   }
-}
-
-/**
- * 处理画布节点的鼠标按下（选中）事件
- * @param node 被点击的节点
- * @param e 鼠标事件对象
- */
-function onSelect(node: MaterialSchema, e: MouseEvent) {
-  // 这里记一下笔记为什么用e.currentTarget 而不是 e.target，为什么要断言
-  // 原因：e.target 可能是节点内部的子元素，而 e.currentTarget 始终是绑定事件的节点本身；
-  // 断言为 HTMLElement 是因为 currentTarget 的类型是 EventTarget，需要手动收窄类型。
-  // selectedTarget.value = e.currentTarget as HTMLElement
-  // 更新 store 中选中的节点 id
-  editorStore.selectNode(node.id)
-
-  nextTick(() => {
-    // 解决第一次选中不能拖动的问题
-    // 在 DOM 更新后手动触发 Moveable 的 dragStart，使首次点击即可进入拖拽状态
-    moveableRef.value.dragStart(e)
-  })
-}
-
-/**
- * 根据 DOM 元素反向查找对应的画布节点数据
- * @param element 画布节点 DOM 元素（带有 data-node-id 属性）
- */
-function getNodeByTarget(element: HTMLElement) {
-  const id = element.getAttribute('data-node-id')
-  return editorStore.findNode(id)
-}
-
-/**
- * 处理 Moveable 拖拽移动事件
- * @param e 拖拽事件（包含最新的 left/top 坐标）
- */
-function onDrag(e: OnDrag) {
-  // 这里记录笔记 为什么这里要手动设置css？为了手动更新
-  // 原因：Moveable 默认不直接修改目标元素的样式，需要手动同步位置，
-  // 这样能保证 DOM 与 store 数据保持一致，且避免 Moveable 内部缓存导致的位置偏差。
-  // 注意：这里统一使用 e.target 而非 selectedTarget，
-  // 以便单选（目标为单个元素）与多选群组拖拽（遍历每个元素的拖拽事件）都能正确更新对应的 DOM。
-  e.target.style.left = e.left + 'px'
-  e.target.style.top = e.top + 'px'
-  // 根据被拖拽的 DOM 元素反向查找对应的节点数据
-  const node = getNodeByTarget(e.target as HTMLElement)
-  // 同步更新 store 中节点的布局数据
-  node.layout.x = e.left
-  node.layout.y = e.top
-}
-
-/**
- * 处理 Moveable 缩放事件
- * @param e 缩放事件（包含最新的宽高及拖拽信息）
- */
-function onResize(e: OnResize) {
-  // 手动更新目标元素的宽高样式（同理使用 e.target 以兼容单/多选）
-  e.target.style.width = e.width + 'px'
-  e.target.style.height = e.height + 'px'
-  // 根据被缩放的 DOM 元素反向查找对应的节点数据
-  const node = getNodeByTarget(e.target as HTMLElement)
-  // 同步更新 store 中节点的尺寸数据
-  node.layout.width = e.width
-  node.layout.height = e.height
-  // 记录这里为什么要调用onDrag？解决往左缩放却往右边缩放不符合预期的问题
-  // 原因：缩放时（尤其是从左侧/上侧缩放）会同时改变节点的位置，
-  // 调用 onDrag 将缩放产生的位移同步到位置数据，保证缩放行为符合直觉。
-  onDrag(e.drag)
-}
-
-/**
- * 清除当前选中状态（点击画布空白区域时触发）
- */
-function onClearSelected() {
-  editorStore.clearSelected()
-}
-
-/**
- * 处理 Selecto 框选结束事件
- * @param e 框选结束事件（包含最终选中的 DOM 元素列表）
- */
-function onSelectEnd(e) {
-  // 提取选中元素的节点 id 列表，并同步到 store（支持多选）
-  const ids = e.selected.map((element) => element.getAttribute('data-node-id'))
-  editorStore.selectedNodeIds = ids
-}
-
-/**
- * 处理多选群组拖拽事件
- * 遍历每个元素的拖拽事件，逐个复用 onDrag 同步 DOM 样式与 store 数据
- * @param e 群组拖拽事件（包含每个元素各自的拖拽信息）
- */
-function onDragGroup(e: OnDragGroup) {
-  e.events.forEach(onDrag)
-}
-
-/**
- * 处理多选群组缩放事件
- * 遍历每个元素的缩放事件，逐个复用 onResize 同步 DOM 样式与 store 数据
- * @param e 群组缩放事件（包含每个元素各自的缩放信息）
- */
-function onResizeGroup(e: OnResizeGroup) {
-  e.events.forEach(onResize)
-}
-
-function onZoomChange() {
-  moveableRef.value.updateRect()
 }
 
 const commandMap = {
