@@ -18,6 +18,7 @@ export interface MaterialSchema {
   type: string
   name: string
   layout: MaterialLayout
+  locked: boolean
   style: Record<string, unknown>
   props: Record<string, unknown>
 }

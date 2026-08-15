@@ -84,7 +84,8 @@ watch(
   selectedNodeIds,
   (ids) => {
     selectedTarget.value = ids.map((id) => {
-      return stageRef.value.querySelector(`[data-node-id='${id}']`)
+      // 排除锁定的
+      return stageRef.value.querySelector(`[data-node-id='${id}']:not([data-node-locked='true'])`)
     })
   },
   { deep: true, flush: 'post' },
@@ -258,6 +259,21 @@ function onResizeGroup(e: OnResizeGroup) {
 function onZoomChange() {
   moveableRef.value.updateRect()
 }
+
+const commandMap = {
+  copy: () => editorStore.copyNode(editorStore.selectedNode),
+  remove: () => editorStore.removeNode(editorStore.selectedNode),
+  moveBottom: () => editorStore.moveTop(editorStore.selectedNode),
+  moveTop: () => editorStore.moveBottom(editorStore.selectedNode),
+  toggleLock: () => {
+    editorStore.toggleLock(editorStore.selectedNode)
+    selectedTarget.value = []
+  },
+}
+
+function onCommand(command: string) {
+  commandMap[command]()
+}
 </script>
 
 <template>
@@ -283,17 +299,32 @@ function onZoomChange() {
         @mousedown.self="onClearSelected"
       >
         <!-- 遍历渲染所有画布节点，按绝对定位摆放 -->
-        <div
-          class="canvas-node"
+        <el-dropdown
           v-for="(node, index) in nodes"
           :key="node.id"
-          :style="getNodeStyle(node, index)"
-          :data-node-id="node.id"
-          @mousedown="onSelect(node, $event)"
+          trigger="contextmenu"
+          @command="onCommand"
         >
-          <!-- 根据节点类型动态渲染对应的物料组件 -->
-          <component :is="getMaterialComponent(node.type)" :schema="node"></component>
-        </div>
+          <div
+            class="canvas-node"
+            :style="getNodeStyle(node, index)"
+            :data-node-id="node.id"
+            :data-node-locked="node.locked"
+            @mousedown="onSelect(node, $event)"
+          >
+            <!-- 根据节点类型动态渲染对应的物料组件 -->
+            <component :is="getMaterialComponent(node.type)" :schema="node"></component>
+          </div>
+          <template #dropdown>
+            <el-dropdown-item command="copy">复制</el-dropdown-item>
+            <el-dropdown-item command="remove">删除</el-dropdown-item>
+            <el-dropdown-item command="moveTop">置顶</el-dropdown-item>
+            <el-dropdown-item command="moveBottom">置底</el-dropdown-item>
+            <el-dropdown-item command="toggleLock">{{
+              node.locked ? '解锁' : '锁定'
+            }}</el-dropdown-item>
+          </template>
+        </el-dropdown>
       </div>
     </SketchRuler>
 

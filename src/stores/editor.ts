@@ -85,6 +85,31 @@ export const useEditorStore = defineStore('editor', () => {
     selectedNodeIds.value = []
   }
 
+  function copyNode(node: MaterialSchema) {
+    const newNode = JSON.parse(JSON.stringify(node))
+    newNode.id = crypto.randomUUID()
+    newNode.layout.x += 20
+    newNode.layout.y += 20
+    addNode(newNode)
+    selectNode(newNode.id)
+  }
+  function removeNode(node: MaterialSchema) {
+    nodes.value = nodes.value.filter(item => node.id !== item.id)
+    selectedNodeIds.value = selectedNodeIds.value.filter(id => id !== node.id)
+  }
+  function moveTop(node: MaterialSchema) {
+    const index = nodes.value.findIndex(item => item.id === node.id)
+    nodes.value.splice(index, 1)
+    nodes.value.unshift(node)
+  }
+  function moveBottom(node: MaterialSchema) {
+    const index = nodes.value.findIndex(item => item.id === node.id)
+    nodes.value.splice(index, 1)
+    nodes.value.push(node)
+  }
+  function toggleLock(node: MaterialSchema) {
+    node.locked = !node.locked
+  }
 
   return {
     panelVisible,
@@ -99,5 +124,10 @@ export const useEditorStore = defineStore('editor', () => {
     addNode,
     findNode,
     clearSelected,
+    copyNode,
+    removeNode,
+    moveTop,
+    moveBottom,
+    toggleLock,
   }
 })
