@@ -263,7 +263,7 @@ function onZoomChange() {
 <template>
   <div ref="canvasRoot" class="canvas-root container">
     <SketchRuler
-      :scale="scale"
+      v-model:scale="scale"
       :thick="20"
       :palette="palette"
       :width="rectWidth"

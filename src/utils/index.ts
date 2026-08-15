@@ -7,3 +7,19 @@ export function debounce(fn, ms) {
     }, ms)
   }
 }
+
+export function getValue(target, key) {
+  const keys = key.split('.')
+  while (keys.length) {
+    const key = keys.shift()
+    target = target[key]
+  }
+  return target
+}
+
+export function setValue(target, key, value) {
+  const keys = key.split('.')
+  const lastKey = keys.pop()
+  const _target = getValue(target, keys.join('.'))
+  _target[lastKey] = value
+}

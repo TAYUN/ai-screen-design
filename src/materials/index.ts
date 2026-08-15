@@ -28,10 +28,12 @@ const groups: MaterialGroup[] = [
 
 const materials: MaterialDefinition[] = []
 const componentMap = new Map()
+const settersMap = new Map()
 // 统一注册物料定义，并基于名称去重，避免重复加载同一物料模块。
 export function register(material: MaterialDefinition, component: Component) {
   materials.push(material)
   componentMap.set(material.schema.type, component)
+  settersMap.set(material.schema.type, material.setters)
 }
 
 const materialModules = import.meta.glob<MaterialModule>('./*/index.ts', {
@@ -63,6 +65,10 @@ export function getMaterialGroup(group: string) {
 // 根据 type 获取组件，供画布渲染组件使用
 export function getMaterialComponent(type: string) {
   return componentMap.get(type)
+}
+
+export function getMaterialSetters(type: string) {
+  return settersMap.get(type)
 }
 // 创建节点函数
 export function createNode(node) {

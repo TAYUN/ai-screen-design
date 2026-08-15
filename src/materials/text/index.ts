@@ -7,6 +7,18 @@ const textMaterial: MaterialDefinition = {
   name: '文本',
   group: 'components',
   icon: 'ri:text',
+  setters: [
+    {
+      type: 'input',
+      label: '内容',
+      key: 'props.content'
+    },
+    {
+      type: 'color',
+      label: '颜色',
+      key: 'style.color'
+    }
+  ],
   schema: {
     type: 'text',
     name: '文本',
