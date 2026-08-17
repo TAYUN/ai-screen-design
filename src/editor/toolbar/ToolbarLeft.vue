@@ -1,9 +1,11 @@
 <script setup lang="ts">
+import { useUndoRedo } from '@/composables/useUndoRedo'
 import { useEditorStore } from '@/stores/editor'
 defineComponent({
   name: 'ToolbarLeft',
 })
 const { panelVisible } = useEditorStore()
+const { undo, redo, canRedo, canUndo } = useUndoRedo()
 </script>
 
 <template>
@@ -32,10 +34,20 @@ const { panelVisible } = useEditorStore()
     >
       <Icon icon="ri:stack-line" />
     </button>
-    <button type="button" class="tool-btn" aria-label="撤销">
+    <button
+      type="button"
+      :class="{ 'tool-btn': true, disabled: !canUndo }"
+      aria-label="撤销"
+      @click="undo"
+    >
       <Icon icon="ri:arrow-go-back-line" />
     </button>
-    <button type="button" class="tool-btn" aria-label="反撤销">
+    <button
+      type="button"
+      :class="{ 'tool-btn': true, disabled: !canRedo }"
+      aria-label="反撤销"
+      @click="redo"
+    >
       <Icon icon="ri:arrow-go-forward-line" />
     </button>
   </div>
@@ -69,6 +81,10 @@ const { panelVisible } = useEditorStore()
     background: rgba(56, 189, 248, 0.2);
     color: #f8fafc;
     box-shadow: 0 0 0 1px rgba(56, 189, 248, 0.25) inset;
+  }
+  &.disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
   }
 }
 </style>

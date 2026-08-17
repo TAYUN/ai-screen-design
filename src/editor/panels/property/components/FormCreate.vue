@@ -1,13 +1,14 @@
 <script setup lang="ts">
 import { ElInput, ElInputNumber, ElColorPicker } from 'element-plus'
-import { getValue, setValue } from '@/utils'
+import { getValue } from '@/utils'
+import { useUndoRedo } from '@/composables/useUndoRedo'
 
 defineOptions({
   name: 'FormCreate',
 })
 
 defineProps(['setters', 'formData'])
-
+const { applyChange } = useUndoRedo()
 const componentMap = {
   input: ElInput,
   // 细节封装
@@ -25,7 +26,7 @@ const componentMap = {
             <component
               :is="componentMap[item.type]"
               :modelValue="getValue(formData, item.key)"
-              @update:modelValue="(val) => setValue(formData, item.key, val)"
+              @update:modelValue="(val) => applyChange(formData, item.key, val)"
             />
           </el-form-item>
         </el-col>
