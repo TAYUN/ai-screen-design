@@ -61,7 +61,7 @@ const { onSelect, onClearSelected, onSelectEnd } = useSelection({
   moveableRef,
   selectedTarget,
 })
-const { onDrag, onResize, onDragGroup, onResizeGroup } = useMoveable()
+const { onDrag, onResize, onDragGroup, onResizeGroup, onStart, onEnd } = useMoveable(moveableRef)
 
 // 获取当前组件实例，用于通过 $el 访问根 DOM 元素
 // const vm = getCurrentInstance()
@@ -191,9 +191,17 @@ function onCommand(command: string) {
       :resizable="true"
       :origin="false"
       @drag="onDrag"
+      @dragStart="onStart"
+      @dragEnd="onEnd"
       @dragGroup="onDragGroup"
+      @dragGroupStart="onStart"
+      @dragGroupEnd="onEnd"
       @resize="onResize"
       @resizeGroup="onResizeGroup"
+      @resizeGroupStart="onStart"
+      @resizeGroupEnd="onEnd"
+      @resizeStart="onStart"
+      @resizeEnd="onEnd"
     ></Moveable>
   </div>
 </template>

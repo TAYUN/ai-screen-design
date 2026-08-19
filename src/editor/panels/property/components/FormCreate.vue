@@ -8,7 +8,7 @@ defineOptions({
 })
 
 defineProps(['setters', 'formData'])
-const { applyChange } = useUndoRedo()
+const { applyChange, startBatch, commitBatch } = useUndoRedo()
 const componentMap = {
   input: ElInput,
   // 细节封装
@@ -27,6 +27,8 @@ const componentMap = {
               :is="componentMap[item.type]"
               :modelValue="getValue(formData, item.key)"
               @update:modelValue="(val) => applyChange(formData, item.key, val)"
+              @focus="startBatch"
+              @blur="commitBatch"
             />
           </el-form-item>
         </el-col>

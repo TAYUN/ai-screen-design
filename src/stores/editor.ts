@@ -1,6 +1,7 @@
-import type { MaterialSchema } from "@/schema/material";
-import { type PageSchema } from "@/schema/page";
-import { defineStore } from "pinia";
+import { useUndoRedo } from '@/composables/useUndoRedo'
+import type { MaterialSchema } from '@/schema/material'
+import { type PageSchema } from '@/schema/page'
+import { defineStore } from 'pinia'
 
 /**
  * 编辑器全局状态 Store（Pinia setup 语法）
@@ -12,6 +13,7 @@ import { defineStore } from "pinia";
  * 4. 提供选中节点的派生状态（selectedNode），供属性面板等消费
  */
 export const useEditorStore = defineStore('editor', () => {
+  const { applyChange } = useUndoRedo()
   // 面板可见性控制：material（物料面板）、layer（图层面板）、property（属性面板）
   const panelVisible = reactive({
     material: true,
@@ -23,7 +25,7 @@ export const useEditorStore = defineStore('editor', () => {
     canvas: {
       width: 1920,
       height: 1080,
-      backgroundColor: '#0d121b'
+      backgroundColor: '#0d121b',
     },
     nodes: [],
   })
@@ -47,12 +49,16 @@ export const useEditorStore = defineStore('editor', () => {
     return nodes.value.find((node) => node.id === selectedNodeId.value)
   })
 
+  function setNodes(newNodes) {
+    applyChange(nodes, 'value', newNodes)
+  }
+
   /**
    * 向画布添加一个新节点
    * @param node 要添加的物料节点 schema
    */
   function addNode(node: MaterialSchema) {
-    nodes.value.push(node)
+    setNodes([...nodes.value, node])
   }
 
   /**
@@ -75,7 +81,7 @@ export const useEditorStore = defineStore('editor', () => {
    * @param id 节点 id
    */
   function findNode(id: string) {
-    return nodes.value.find(node => node.id === id)
+    return nodes.value.find((node) => node.id === id)
   }
 
   /**
@@ -94,21 +100,22 @@ export const useEditorStore = defineStore('editor', () => {
     selectNode(newNode.id)
   }
   function removeNode(node: MaterialSchema) {
-    nodes.value = nodes.value.filter(item => node.id !== item.id)
-    selectedNodeIds.value = selectedNodeIds.value.filter(id => id !== node.id)
+    setNodes(nodes.value.filter((item) => node.id !== item.id))
+
+    selectedNodeIds.value = selectedNodeIds.value.filter((id) => id !== node.id)
   }
   function moveTop(node: MaterialSchema) {
-    const index = nodes.value.findIndex(item => item.id === node.id)
-    nodes.value.splice(index, 1)
-    nodes.value.unshift(node)
+    const index = nodes.value.findIndex((item) => item.id === node.id)
+    const splicedNodes = nodes.value.toSpliced(index, 1)
+    setNodes([node, ...splicedNodes])
   }
   function moveBottom(node: MaterialSchema) {
-    const index = nodes.value.findIndex(item => item.id === node.id)
-    nodes.value.splice(index, 1)
-    nodes.value.push(node)
+    const index = nodes.value.findIndex((item) => item.id === node.id)
+    const splicedNodes = nodes.value.toSpliced(index, 1)
+    setNodes([...splicedNodes, node])
   }
   function toggleLock(node: MaterialSchema) {
-    node.locked = !node.locked
+    applyChange(node, 'locked', !node.locked)
   }
 
   return {
