@@ -1,22 +1,23 @@
 <script setup lang="ts">
 import type { MaterialSchema } from '@/schema/material'
-import { init, type EChartsType } from 'echarts'
+import { init, type EChartsOption, type EChartsType } from 'echarts'
 defineOptions({
   name: 'ChartMaterial',
 })
 const props = defineProps<{ schema: MaterialSchema }>()
 const chartRef = useTemplateRef('chart')
 let chart: EChartsType
+const option = computed(() => props.schema.props.option as EChartsOption)
 watch(
-  () => props.schema.props.option,
+  option,
   () => {
-    chart.setOption(props.schema.props.option)
+    chart.setOption(option.value)
   },
   { deep: true },
 )
 onMounted(() => {
   chart = init(chartRef.value)
-  chart.setOption(props.schema.props.option)
+  chart.setOption(option.value)
   const observer = new ResizeObserver(() => {
     chart.resize()
   })
