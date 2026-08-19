@@ -11,7 +11,9 @@ defineOptions({
 const editorStore = useEditorStore()
 const { selectedNode } = storeToRefs(editorStore)
 
-const setters = getMaterialSetters(selectedNode.value.type)
+const setters = computed(() => {
+  return getMaterialSetters(selectedNode.value.type)
+})
 
 const layoutSetters = [
   {
