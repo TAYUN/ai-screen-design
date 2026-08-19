@@ -31,7 +31,6 @@
 - 首次创建：YYYY-MM-DD
 - 最近进展：YYYY-MM-DD
 - 状态：进行中 / 已完成 / 阻塞
-- 关联提交：未提交 / <commit hash>
 
 ## 目标
 
@@ -47,6 +46,7 @@
 
 ### YYYY-MM-DD 阶段名称
 
+- 关联提交：未提交 / <commit hash> / <commit hash>, <commit hash>
 - 目标：本阶段要完成的内容。
 - 已完成：具体改动及影响范围。
 - 设计与取舍：本阶段的关键选择。
