@@ -1,4 +1,3 @@
-
 export interface MaterialGroup {
   key: string
   name: string
@@ -19,7 +18,7 @@ export interface MaterialSchema {
   name: string
   layout: MaterialLayout
   locked?: boolean
-  style: Record<string, unknown>
+  style?: Record<string, unknown>
   props: Record<string, unknown>
 }
 

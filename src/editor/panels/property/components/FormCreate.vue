@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ElInput, ElInputNumber, ElColorPicker } from 'element-plus'
+import { ElInput, ElInputNumber, ElColorPicker, ElCheckbox, ElSelect } from 'element-plus'
 import { getValue } from '@/utils'
 import { useUndoRedo } from '@/composables/useUndoRedo'
 
@@ -14,6 +14,8 @@ const componentMap = {
   // 细节封装
   number: (props, { slots }) => h(ElInputNumber, { precision: 0, ...props }, slots),
   color: ElColorPicker,
+  checkbox: ElCheckbox,
+  select: ElSelect,
 }
 </script>
 
@@ -26,6 +28,7 @@ const componentMap = {
             <component
               :is="componentMap[item.type]"
               :modelValue="getValue(formData, item.key)"
+              v-bind="item.props"
               @update:modelValue="(val) => applyChange(formData, item.key, val)"
               @focus="startBatch"
               @blur="commitBatch"
