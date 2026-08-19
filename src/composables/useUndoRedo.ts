@@ -1,5 +1,9 @@
 import { getValue, setValue } from '@/utils'
 
+/**
+ * 撤销栈的最大容量，超出从头删除
+ */
+const MAX_HISTORY_LENGTH = 1000
 // 撤销和重做栈在多个组件实例之间共享，保证属性表单与工具栏操作的是同一份历史记录。
 const undoStack = shallowReactive([])
 const redoStack = shallowReactive([])
@@ -24,9 +28,17 @@ export function useUndoRedo() {
    */
   function commitBatch() {
     if (activeBatch.length) {
-      undoStack.push(activeBatch)
+      pushRecord(activeBatch)
     }
     activeBatch = null
+  }
+
+  // 如果栈已经超出最大值，移除掉第一条
+  function pushRecord(record) {
+    undoStack.push(record)
+    if (undoStack.length > MAX_HISTORY_LENGTH) {
+      undoStack.shift()
+    }
   }
 
   /**
@@ -50,7 +62,7 @@ export function useUndoRedo() {
         activeBatch.push(record)
       }
     } else {
-      undoStack.push([record])
+      pushRecord([record])
     }
     setValue(target, key, newValue)
     redoStack.length = 0
@@ -79,7 +91,7 @@ export function useUndoRedo() {
       setValue(target, key, newValue)
     })
     // 放入到撤销的栈中
-    undoStack.push(records)
+    pushRecord(records)
   }
   return {
     canUndo,
