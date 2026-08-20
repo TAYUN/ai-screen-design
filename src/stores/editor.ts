@@ -34,6 +34,12 @@ export const useEditorStore = defineStore('editor', () => {
   // 画布上的所有组件节点列表
   const nodes = toRef(page.value, 'nodes')
 
+  // 设置 page
+  function setPage(newPage: PageSchema) {
+    // !!! 要这样写 不能这样：page.value = newPage，赋值新对象会导致 toRef(page.value, 'nodes') 断开联系
+    Object.assign(page.value, newPage)
+  }
+
   // 当前选中节点的 id 列表（数组为空 [] 表示未选中任何节点；支持多选）
   const selectedNodeIds = ref<string[]>([])
 
@@ -144,5 +150,6 @@ export const useEditorStore = defineStore('editor', () => {
     moveBottom,
     toggleLock,
     updateNode,
+    setPage,
   }
 })
