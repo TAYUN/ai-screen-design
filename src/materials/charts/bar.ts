@@ -3,7 +3,7 @@ import type { MaterialDefinition } from '@/schema/material.ts'
 export const barMaterial: MaterialDefinition = {
   name: '柱状图',
   group: 'charts',
-  icon: 'fluent-color:list-bar-16',
+  icon: 'ri:bar-chart-2-line',
   setters: [
     {
       type: 'input',

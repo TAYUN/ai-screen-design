@@ -3,7 +3,7 @@ import type { MaterialDefinition } from '@/schema/material.ts'
 export const areaMaterial: MaterialDefinition = {
   name: '面积图',
   group: 'charts',
-  icon: 'fluent-color:list-bar-16',
+  icon: 'ri:area-chart-line',
   setters: [
     {
       type: 'input',

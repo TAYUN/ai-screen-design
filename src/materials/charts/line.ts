@@ -3,7 +3,7 @@ import type { MaterialDefinition } from '@/schema/material.ts'
 export const lineMaterial: MaterialDefinition = {
   name: '折线图',
   group: 'charts',
-  icon: 'fluent-color:list-bar-16',
+  icon: 'ri:line-chart-line',
   setters: [
     {
       type: 'input',

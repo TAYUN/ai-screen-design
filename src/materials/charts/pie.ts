@@ -3,7 +3,7 @@ import type { MaterialDefinition } from '@/schema/material.ts'
 export const pieMaterial: MaterialDefinition = {
   name: '饼图',
   group: 'charts',
-  icon: 'fluent-color:list-bar-16',
+  icon: 'ri:pie-chart-2-line',
   setters: [
     {
       type: 'input',
