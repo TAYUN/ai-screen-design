@@ -14,9 +14,11 @@ export function useCanvasRuler({ moveableRef, canvasRootRef }) {
 
   const rectWidth = ref(1000)
   const rectHeight = ref(800)
-
-  const canvasWidth = toRef(canvas.value, 'width')
-  const canvasHeight = toRef(canvas.value, 'height')
+  // ! 这里不能直接使用 toRef。canvas.value重新赋值新对象会导致canvasWidth与其断开联系
+  // const canvasWidth = toRef(canvas.value, 'width')
+  // const canvasHeight = toRef(canvas.value, 'height')
+  const canvasWidth = computed(() => canvas.value.width)
+  const canvasHeight = computed(() => canvas.value.height)
 
   const canvasStyle = computed(() => {
     return {
