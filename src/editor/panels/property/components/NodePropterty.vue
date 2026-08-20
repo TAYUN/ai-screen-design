@@ -42,10 +42,36 @@ const layoutSetters = [
   },
 ]
 const active = ref('node')
+const visiable = ref(false)
+const jsonText = ref('')
+function previewJson() {
+  jsonText.value = JSON.stringify(selectedNode.value, null, 2)
+  visiable.value = true
+}
+
+function onConfirm() {
+  // 拿到更新后的节点
+  const newNode = JSON.parse(jsonText.value)
+  // 更新
+  editorStore.updateNode(selectedNode.value.id, {
+    ...newNode,
+    // id 和 type 不能修改，沿用之前的
+    id: selectedNode.value.id,
+    type: selectedNode.value.type,
+  })
+  // 关闭抽屉
+  visiable.value = false
+}
 </script>
 
 <template>
   <div class="node-property container">
+    <div class="node-title">
+      <span>{{ selectedNode.name }}</span>
+      <button type="button" class="cursor-pointer" aria-label="json" @click="previewJson">
+        <Icon icon="ri:braces-line" />
+      </button>
+    </div>
     <el-collapse v-model="active" accordion>
       <el-collapse-item title="布局属性" name="layout">
         <form-create :setters="layoutSetters" :form-data="selectedNode"></form-create>
@@ -54,11 +80,29 @@ const active = ref('node')
         <form-create :setters="setters" :form-data="selectedNode"></form-create>
       </el-collapse-item>
     </el-collapse>
+
+    <el-drawer :destroy-on-close="true" v-model="visiable" title="编辑 JSON" size="800">
+      <MonacoEditor v-model="jsonText" />
+
+      <template #footer>
+        <el-button @click="visiable = false">取消</el-button>
+        <el-button type="primary" @click="onConfirm">确认</el-button>
+      </template>
+    </el-drawer>
   </div>
 </template>
 
 <style scoped lang="scss">
 .node-property {
+  .node-title {
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background-color: bg-mix(40);
+    font-weight: 600;
+    padding: 0 20px;
+  }
   :deep(.el-collapse) {
     --el-collapse-border-color: var(--border-color);
     --el-collapse-header-height: 48px;

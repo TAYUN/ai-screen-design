@@ -118,6 +118,13 @@ export const useEditorStore = defineStore('editor', () => {
     applyChange(node, 'locked', !node.locked)
   }
 
+  function updateNode(id, newNode) {
+    // 使用 map 返回新列表，在新列表中做了替换
+    const newNodes = nodes.value.map((node) => (node.id === id ? newNode : node))
+    // 设置新的 nodes
+    setNodes(newNodes)
+  }
+
   return {
     panelVisible,
     page,
@@ -136,5 +143,6 @@ export const useEditorStore = defineStore('editor', () => {
     moveTop,
     moveBottom,
     toggleLock,
+    updateNode,
   }
 })
