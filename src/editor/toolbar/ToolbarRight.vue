@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { useEditorStore } from '@/stores/editor'
+import { ElMessage } from 'element-plus'
 import { storeToRefs } from 'pinia'
 
 defineOptions({
@@ -10,6 +11,9 @@ const { page } = storeToRefs(editorStore)
 
 const visiable = ref(false)
 const jsonText = ref('')
+
+const inputRef = useTemplateRef('inputRef')
+
 function previewJson() {
   jsonText.value = JSON.stringify(page.value, null, 2)
   visiable.value = true
@@ -22,6 +26,40 @@ function onConfirm() {
   editorStore.setPage(newPage)
   // 关闭抽屉
   visiable.value = false
+}
+
+// 导出JSON
+function onExport() {
+  const json = JSON.stringify(page.value, null, 2)
+  const blob = new Blob([json], { type: 'application/json;charset=utf-8' })
+  // 创建文件的 blob 的 URL
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = 'screen-design.json'
+  document.body.appendChild(a)
+  a.click()
+  document.body.removeChild(a)
+  // 需要手动释放
+  URL.revokeObjectURL(url)
+}
+
+// 导入 JSON
+function onInport() {
+  inputRef.value.click()
+}
+
+async function onFileChange(e) {
+  const file: File = e.target.files[0]
+  if (!file) return
+  const text = await file.text()
+  try {
+    const newPage = JSON.parse(text)
+    editorStore.setPage(newPage)
+    ElMessage.success('导入成功')
+  } catch {
+    ElMessage.error('请检查 JSON 是否合法')
+  }
 }
 </script>
 
@@ -36,12 +74,14 @@ function onConfirm() {
     <button type="button" class="tool-btn" aria-label="发布">
       <Icon icon="ri:upload-line" />
     </button>
-    <button type="button" class="tool-btn" aria-label="导入">
+    <button type="button" class="tool-btn" aria-label="导入" @click="onInport">
       <Icon icon="ri:download-2-line" />
     </button>
-    <button type="button" class="tool-btn" aria-label="导出">
+    <button type="button" class="tool-btn" aria-label="导出" @click="onExport">
       <Icon icon="ri:upload-2-line" />
     </button>
+
+    <input ref="inputRef" type="file" v-show="false" @change="onFileChange" />
 
     <el-drawer :destroy-on-close="true" v-model="visiable" title="编辑 JSON" size="800">
       <MonacoEditor v-model="jsonText" />
