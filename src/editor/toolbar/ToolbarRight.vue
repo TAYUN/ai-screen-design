@@ -1,7 +1,28 @@
 <script setup lang="ts">
+import { useEditorStore } from '@/stores/editor'
+import { storeToRefs } from 'pinia'
+
 defineOptions({
   name: 'ToolbarRight',
 })
+const editorStore = useEditorStore()
+const { page } = storeToRefs(editorStore)
+
+const visiable = ref(false)
+const jsonText = ref('')
+function previewJson() {
+  jsonText.value = JSON.stringify(page.value, null, 2)
+  visiable.value = true
+}
+
+function onConfirm() {
+  // 拿到更新后的节点
+  const newPage = JSON.parse(jsonText.value)
+  // 更新
+  editorStore.setPage(newPage)
+  // 关闭抽屉
+  visiable.value = false
+}
 </script>
 
 <template>
@@ -9,7 +30,7 @@ defineOptions({
     <button type="button" class="tool-btn" aria-label="预览">
       <Icon icon="ri:eye-line" />
     </button>
-    <button type="button" class="tool-btn" aria-label="json">
+    <button type="button" class="tool-btn" aria-label="json" @click="previewJson">
       <Icon icon="ri:braces-line" />
     </button>
     <button type="button" class="tool-btn" aria-label="发布">
@@ -21,6 +42,15 @@ defineOptions({
     <button type="button" class="tool-btn" aria-label="导出">
       <Icon icon="ri:upload-2-line" />
     </button>
+
+    <el-drawer :destroy-on-close="true" v-model="visiable" title="编辑 JSON" size="800">
+      <MonacoEditor v-model="jsonText" />
+
+      <template #footer>
+        <el-button @click="visiable = false">取消</el-button>
+        <el-button type="primary" @click="onConfirm">确认</el-button>
+      </template>
+    </el-drawer>
   </div>
 </template>
 
