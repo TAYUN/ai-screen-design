@@ -209,6 +209,10 @@ function onCommand(command: string) {
 <style scoped lang="scss">
 .canvas-root {
   height: 100%;
+  position: relative;
+  overflow: hidden;
+  // 创建新的上下文
+  isolation: isolate;
   .canvas-stage {
     position: relative;
     .canvas-node {
