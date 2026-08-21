@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { useDataSource } from '@/composables/useDataSource'
 import type { MaterialSchema } from '@/schema/material'
-import { init, type EChartsOption, type EChartsType } from 'echarts'
+import { init, type DatasetComponentOption, type EChartsOption, type EChartsType } from 'echarts'
 defineOptions({
   name: 'ChartMaterial',
 })
@@ -14,13 +14,17 @@ const dataId = computed(() => props.schema.dataId)
 const { data } = useDataSource(dataId)
 
 const option = computed(() => {
-  const _option = props.schema.props.option as EChartsOption
+  const baseOption = props.schema.props.option as EChartsOption
+  const baseDataset = (
+    Array.isArray(baseOption.dataset) ? baseOption.dataset[0] : baseOption.dataset
+  ) as DatasetComponentOption
+
   return {
-    ..._option,
+    ...baseOption,
     dataset: {
-      ..._option.dataset,
-      // 重写source，如果数据源中存在这个数据，就使用，否则使用自带的。
-      source: data.value || _option.dataset.source,
+      ...baseDataset,
+      // dataId 未绑定或找不到时，保留物料默认数据。
+      source: data.value ?? baseDataset?.source,
     },
   }
 })
