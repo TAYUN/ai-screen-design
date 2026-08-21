@@ -28,12 +28,55 @@ export const useEditorStore = defineStore('editor', () => {
       backgroundColor: '#0d121b',
     },
     nodes: [],
+    dataSources: [
+      {
+        type: 'static',
+        id: '123',
+        name: '销售数据',
+        data: [
+          {
+            label: '一月',
+            value: 100,
+          },
+          {
+            label: '二月',
+            value: 200,
+          },
+          {
+            label: '三月',
+            value: 300,
+          },
+        ],
+      },
+      {
+        type: 'static',
+        id: '456',
+        name: '访问数据',
+        data: [
+          {
+            label: '一月',
+            value: 1000,
+          },
+          {
+            label: '二月',
+            value: 800,
+          },
+          {
+            label: '三月',
+            value: 1100,
+          },
+        ],
+      },
+    ],
   })
 
   const canvas = toRef(page.value, 'canvas')
   // 画布上的所有组件节点列表
   const nodes = toRef(page.value, 'nodes')
-
+  /**
+   * 数据源
+   */
+  const dataSources = toRef(page.value, 'dataSources')
   // 设置 page
   function setPage(newPage: PageSchema) {
     // !!! 要这样写 不能这样：page.value = newPage，赋值新对象会导致 toRef(page.value, 'nodes') 断开联系
@@ -135,6 +178,7 @@ export const useEditorStore = defineStore('editor', () => {
     panelVisible,
     page,
     nodes,
+    dataSources,
     canvas,
     selectedNode,
     selectNode,

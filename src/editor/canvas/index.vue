@@ -30,6 +30,15 @@ defineOptions({
 // 获取编辑器全局状态 store
 const editorStore = useEditorStore()
 
+const { dataSources } = storeToRefs(editorStore)
+
+/**
+ * 物料状态来源
+ * 1. 编辑时的状态 => 编辑器在用的状态
+ * 2. 运行时的状态 => 渲染器在用的状态
+ */
+provide('dataSources', dataSources)
+
 // 使用 storeToRefs 解构响应式状态，保持响应性（避免直接解构丢失响应式）
 // 这里仅解构 nodes；选中状态（selectedNodeIds）由框选/点击事件直接写入 store
 const { nodes } = storeToRefs(editorStore)
