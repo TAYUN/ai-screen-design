@@ -6,7 +6,7 @@ import 'element-plus/theme-chalk/dark/css-vars.css'
 import App from './App.vue'
 import router from './router'
 import { Icon } from '@iconify/vue'
-
+import '@/mock/data.ts'
 const app = createApp(App)
 
 app.use(createPinia())

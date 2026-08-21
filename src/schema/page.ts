@@ -13,6 +13,18 @@ export interface DataSourceSchema {
    * 数据源载体
    */
   data: unknown
+  /**
+   * 接口请求的地址
+   */
+  url?: string
+  /**
+   * 接口轮询间隔 ms
+   */
+  interval?: number
+  /**
+   * 预设参数，会发送给后端
+   */
+  params?: Record<string, unknown>
 }
 
 interface CanvasSchema {
