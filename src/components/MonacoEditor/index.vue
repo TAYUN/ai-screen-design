@@ -19,9 +19,9 @@ window.MonacoEnvironment = {
     return new EditorWorker()
   },
 }
-
+let instance
 onMounted(() => {
-  const instance = editor.create(editorElement.value, {
+  instance = editor.create(editorElement.value, {
     value: modelValue.value,
     theme: 'vs-dark',
     language: props.lang || 'json',
@@ -30,7 +30,6 @@ onMounted(() => {
     // 自适应父节点宽高
     automaticLayout: true,
   })
-
   instance.onDidChangeModelContent(() => {
     modelValue.value = instance.getValue()
   })
@@ -38,6 +37,11 @@ onMounted(() => {
   onBeforeUnmount(() => {
     instance.dispose()
   })
+})
+
+watch(modelValue, (newVal) => {
+  if (newVal === instance.getValue()) return
+  instance.setValue(newVal)
 })
 </script>
 
