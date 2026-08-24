@@ -25,3 +25,13 @@ export function setValue(target, key, value) {
   }
   target[lastKey] = value
 }
+
+/**
+ * 深拷贝
+ * 此处暂时不处理复杂情况，不做严格深拷贝后续再优化
+ */
+export function deepClone<T>(value: T): T {
+  // 拦截基础类型
+  if (typeof value !== 'object' || typeof value === null) return value
+  return JSON.parse(JSON.stringify(value))
+}
