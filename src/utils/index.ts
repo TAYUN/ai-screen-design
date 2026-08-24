@@ -9,6 +9,7 @@ export function debounce(fn, ms) {
 }
 
 export function getValue(target, key) {
+  if (!key) return target
   const keys = key.split('.')
   while (keys.length) {
     const key = keys.shift()
