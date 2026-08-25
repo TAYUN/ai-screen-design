@@ -2,7 +2,6 @@
 import { useDataSource } from '@/composables/useDataSource'
 import type { MaterialSchema } from '@/schema/material'
 import { init, type DatasetComponentOption, type EChartsOption, type EChartsType } from 'echarts'
-import { ElButton } from 'element-plus'
 defineOptions({
   name: 'ChartMaterial',
 })
@@ -12,7 +11,7 @@ const chartRef = useTemplateRef('chartRef')
 let chart: EChartsType
 const dataId = computed(() => props.schema.dataId)
 
-const { data, loading, refresh } = useDataSource(dataId)
+const { data, loading } = useDataSource(dataId)
 
 const option = computed(() => {
   const baseOption = props.schema.props.option as EChartsOption
@@ -54,7 +53,6 @@ onMounted(() => {
 </script>
 
 <template>
-  <ElButton @click="refresh({ a: 1, b: 2 })">按钮</ElButton>
   <div v-loading="loading" class="char-material w-full h-full" ref="chartRef"></div>
 </template>
 

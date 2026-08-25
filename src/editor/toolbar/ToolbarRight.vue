@@ -3,10 +3,14 @@ import { useEditorStore } from '@/stores/editor'
 import { ElMessage } from 'element-plus'
 import { storeToRefs } from 'pinia'
 import DataSourceManger from './components/DataSourceManger.vue'
+import { useRouter } from 'vue-router'
 
 defineOptions({
   name: 'ToolbarRight',
 })
+
+const router = useRouter()
+
 const editorStore = useEditorStore()
 const { page } = storeToRefs(editorStore)
 
@@ -76,11 +80,16 @@ function onSave() {
   dataSourceManagerRef.value.save()
   dataSourceVisible.value = false
 }
+
+function onPreView() {
+  // 预览
+  router.push('/preview')
+}
 </script>
 
 <template>
   <div class="flex gap-8 items-center justify-end">
-    <button type="button" class="tool-btn" aria-label="预览">
+    <button type="button" class="tool-btn" aria-label="预览" @click="onPreView">
       <Icon icon="ri:eye-line" />
     </button>
     <button type="button" class="tool-btn" aria-label="json" @click="previewJson">
