@@ -17,6 +17,17 @@ export interface DataSourceSchema {
    * 接口请求的地址
    */
   url?: string
+
+  /**
+   * 请求方法
+   */
+  method?: 'get' | 'post'
+
+  /**
+   * 响应路径
+   * 'res.list'
+   */
+  responsePath?: string
   /**
    * 接口轮询间隔 ms
    */

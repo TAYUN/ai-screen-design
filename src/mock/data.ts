@@ -1,5 +1,9 @@
 import Mock from 'mockjs'
 
+Mock.setup({
+  timeout: 3000,
+})
+
 Mock.mock(/\/api\/data/, 'get', (options) => {
   // 创建 完整URL
   const url = new URL(options.url, location.origin)
