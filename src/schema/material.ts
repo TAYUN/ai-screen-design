@@ -12,6 +12,20 @@ export interface MaterialLayout {
   height: number
 }
 
+interface MaterialEvent {
+  // 事件类型 click mousmove
+  type: string
+  // 事件名
+  name: string
+  /**
+   * 函数体
+   * const code = 'console.log(123)'
+   * const fn = new Function(code)
+   * fn(123456)
+   */
+  code: string
+}
+
 export interface MaterialSchema {
   id: string
   type: string
@@ -21,6 +35,7 @@ export interface MaterialSchema {
   style?: Record<string, unknown>
   props: Record<string, unknown>
   dataId?: string
+  events?: MaterialEvent[]
 }
 
 interface SetterSchema {

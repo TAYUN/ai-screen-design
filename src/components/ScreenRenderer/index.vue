@@ -76,6 +76,22 @@ function init() {
   left.value = (window.innerWidth - canvas.value.width * scale.value) / 2
   top.value = (window.innerHeight - canvas.value.height * scale.value) / 2
 }
+/**
+ * 创建组件绑定的事件函数
+ * @param node
+ */
+function createEvents(node: MaterialSchema) {
+  const listeners = {}
+  const events = node.events || []
+  events.forEach((event) => {
+    listeners[event.type] = () => {
+      const fn = new Function('$context', '$node', event.code)
+      // 执行创建的函数
+      fn(context, node)
+    }
+  })
+  return listeners
+}
 
 // 注册节点实例
 function registerNodeInstance() {
@@ -109,7 +125,12 @@ onMounted(() => {
         :key="node.id"
         :style="getNodeStyle(node, index)"
       >
-        <component :ref="node.id" :is="getMaterialComponent(node.type)" :schema="node" />
+        <component
+          :ref="node.id"
+          :is="getMaterialComponent(node.type)"
+          :schema="node"
+          v-on="createEvents(node)"
+        />
       </div>
     </div>
   </div>

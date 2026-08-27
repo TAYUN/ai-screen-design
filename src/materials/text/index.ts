@@ -41,6 +41,13 @@ const textMaterial: MaterialDefinition = {
       ellipsis: false,
       writingMode: 'horizontal-tb',
     },
+    events: [
+      {
+        type: 'click',
+        name: 'fn',
+        code: "$context.refreshNodesByDataId('567')",
+      },
+    ],
   },
 }
 
