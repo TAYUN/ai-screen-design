@@ -45,6 +45,7 @@ interface CanvasSchema {
 }
 
 export interface PageSchema {
+  id?: string
   canvas: CanvasSchema
   // 页面上的节点是列表；后续增删、查找、排序都基于数组操作。
   nodes: MaterialSchema[]

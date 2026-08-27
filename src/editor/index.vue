@@ -6,12 +6,26 @@ import MaterialPanel from './panels/material/index.vue'
 import LayerPanel from './panels/layer/index.vue'
 import CanvasRoot from './canvas/index.vue'
 import PropertyPanel from './panels/property/index.vue'
+import { useRoute } from 'vue-router'
+import { getPublishPage } from '@/utils/publish.ts'
 
 defineOptions({
   name: 'ScreenEditor',
 })
 
 const editStore = useEditorStore()
+
+const route = useRoute()
+
+const pageId = route.query.id
+if (pageId) {
+  // 如果pageId有，去查询数据库（localStorage）
+  const page = getPublishPage(pageId)
+  editStore.setPage(page)
+}
+
+// const { dataSources } = storeToRefs(editStore)
+// provide('dataSources', dataSources)
 
 const materialWidth = computed(() => (editStore.panelVisible.material ? '260px' : 0))
 const layerWidth = computed(() => (editStore.panelVisible.layer ? '220px' : 0))

@@ -4,6 +4,7 @@ import { ElMessage } from 'element-plus'
 import { storeToRefs } from 'pinia'
 import DataSourceManger from './components/DataSourceManger.vue'
 import { useRouter } from 'vue-router'
+import { publishPage } from '@/utils/publish.ts'
 
 defineOptions({
   name: 'ToolbarRight',
@@ -85,6 +86,14 @@ function onPreView() {
   // 预览
   router.push('/preview')
 }
+
+function onPublish() {
+  /**
+   * 存到localStorage中
+   */
+  const id = publishPage(page.value)
+  router.push(`/screen?id=${id}`)
+}
 </script>
 
 <template>
@@ -95,7 +104,7 @@ function onPreView() {
     <button type="button" class="tool-btn" aria-label="json" @click="previewJson">
       <Icon icon="ri:braces-line" />
     </button>
-    <button type="button" class="tool-btn" aria-label="发布">
+    <button type="button" class="tool-btn" aria-label="发布" @click="onPublish">
       <Icon icon="ri:upload-line" />
     </button>
     <button type="button" class="tool-btn" aria-label="数据源" @click="openDataSource">
