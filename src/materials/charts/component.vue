@@ -11,7 +11,7 @@ const chartRef = useTemplateRef('chartRef')
 let chart: EChartsType
 const dataId = computed(() => props.schema.dataId)
 
-const { data, loading } = useDataSource(dataId)
+const { data, loading, refresh } = useDataSource(dataId)
 
 const option = computed(() => {
   const baseOption = props.schema.props.option as EChartsOption
@@ -49,6 +49,10 @@ onMounted(() => {
     observer.disconnect()
     chart.dispose()
   })
+})
+
+defineExpose({
+  refresh,
 })
 </script>
 

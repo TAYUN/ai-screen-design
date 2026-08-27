@@ -10,6 +10,7 @@
 -->
 <script setup lang="ts">
 import { getMaterialComponent } from '@/materials'
+import { createRuntimeContext } from '@/runtime/context'
 import type { MaterialSchema } from '@/schema/material'
 import type { PageSchema } from '@/schema/page'
 
@@ -19,9 +20,15 @@ defineOptions({
 
 const props = defineProps<{ page: PageSchema }>()
 
-const nodes = computed(() => props.page.nodes)
-const canvas = computed(() => props.page.canvas)
-const dataSources = computed(() => props.page.dataSources)
+const runtimePage = ref(props.page)
+const context = createRuntimeContext(runtimePage)
+// 暂时往window上放，方便测试
+// @ts-expect-error: Unreachable code error
+window.$context = context
+
+const nodes = computed(() => runtimePage.value.nodes)
+const canvas = computed(() => runtimePage.value.canvas)
+const dataSources = computed(() => runtimePage.value.dataSources)
 
 // 画布的统一缩放比例，以及缩放后画布在视口中的水平、垂直偏移量。
 const scale = ref(1)
@@ -69,7 +76,20 @@ function init() {
   left.value = (window.innerWidth - canvas.value.width * scale.value) / 2
   top.value = (window.innerHeight - canvas.value.height * scale.value) / 2
 }
+
+// 注册节点实例
+function registerNodeInstance() {
+  const refs = {}
+  for (const key in vm.refs) {
+    refs[key] = vm.refs[key][0]
+  }
+  context.registerNodeInstance(refs)
+}
+
+const vm = getCurrentInstance()
+
 onMounted(() => {
+  registerNodeInstance()
   // 首次进入预览时计算布局，并在窗口尺寸变化后重新计算。
   init()
   addEventListener('resize', init)
@@ -89,7 +109,7 @@ onMounted(() => {
         :key="node.id"
         :style="getNodeStyle(node, index)"
       >
-        <component :is="getMaterialComponent(node.type)" :schema="node" />
+        <component :ref="node.id" :is="getMaterialComponent(node.type)" :schema="node" />
       </div>
     </div>
   </div>
