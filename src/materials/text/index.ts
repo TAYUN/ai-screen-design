@@ -1,4 +1,3 @@
-
 import type { MaterialModule } from '@/materials'
 import type { MaterialDefinition } from '@/schema/material.ts'
 import TextMaterial from './component.vue'
@@ -11,13 +10,18 @@ const textMaterial: MaterialDefinition = {
     {
       type: 'input',
       label: '内容',
-      key: 'props.content'
+      key: 'props.content',
     },
     {
       type: 'color',
       label: '颜色',
-      key: 'style.color'
-    }
+      key: 'style.color',
+    },
+    {
+      type: 'number',
+      label: '字号',
+      key: 'style.fontSize',
+    },
   ],
   schema: {
     type: 'text',
@@ -30,12 +34,7 @@ const textMaterial: MaterialDefinition = {
     },
     style: {
       color: 'white',
-      fontSize: 28,
-      fontWeight: 600,
-      lineHeight: 1.4,
-      letterSpacing: 0,
-      textAlign: 'left',
-      backgroundColor: 'transparent',
+      fontSize: 16,
     },
     props: {
       content: '双击编辑文本',
