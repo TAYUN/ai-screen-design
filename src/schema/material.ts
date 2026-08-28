@@ -12,7 +12,7 @@ export interface MaterialLayout {
   height: number
 }
 
-interface MaterialEvent {
+export interface MaterialEvent {
   // 事件类型 click mousmove
   type: string
   // 事件名
