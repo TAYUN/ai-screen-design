@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { getMaterialEventOptions } from '@/materials'
 import type { MaterialEvent } from '@/schema/material'
 import { useEditorStore } from '@/stores/editor'
 import { deepClone } from '@/utils'
@@ -31,6 +32,10 @@ const dispatchOptions = computed(() => {
       }),
     }
   })
+})
+
+const eventOptions = computed(() => {
+  return getMaterialEventOptions(selectedNode.value.type)
 })
 
 const activeEvent = ref()
@@ -125,7 +130,13 @@ defineExpose({
           <el-input v-model="activeEvent.name" />
         </el-form-item>
         <el-form-item label="类型">
-          <el-input v-model="activeEvent.type" />
+          <el-select
+            v-model="activeEvent.type"
+            :options="eventOptions"
+            allow-create
+            filterable
+            placeholder="请选择事件类型"
+          />
         </el-form-item>
         <el-form-item label="函数体">
           <div class="flex flex-col w-full bg-[#1e1e1e]">

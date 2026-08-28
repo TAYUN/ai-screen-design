@@ -28,12 +28,12 @@ const groups: MaterialGroup[] = [
 
 const materials: MaterialDefinition[] = []
 const componentMap = new Map()
-const settersMap = new Map()
+const materialMap = new Map()
 // 统一注册物料定义，并基于名称去重，避免重复加载同一物料模块。
 export function register(material: MaterialDefinition, component: Component) {
   materials.push(material)
   componentMap.set(material.schema.type, component)
-  settersMap.set(material.schema.type, material.setters)
+  materialMap.set(material.schema.type, material)
 }
 
 const materialModules = import.meta.glob<MaterialModule>('./*/index.ts', {
@@ -45,7 +45,7 @@ Object.values(materialModules).forEach((module) => {
   module.install(register)
 })
 
-const groupMap = new Map(groups.map(group => [group.key, group]))
+const groupMap = new Map(groups.map((group) => [group.key, group]))
 
 // 返回物料分组定义，供物料面板左侧导航使用。
 export function getMaterialGroups() {
@@ -54,7 +54,7 @@ export function getMaterialGroups() {
 
 // 按分组筛选已注册的物料，供右侧物料列表展示。
 export function getMaterialsByGroup(group: string) {
-  return materials.filter(item => item.group === group)
+  return materials.filter((item) => item.group === group)
 }
 
 // 根据分组 key 获取分组信息，便于面板展示当前标题。
@@ -68,7 +68,11 @@ export function getMaterialComponent(type: string) {
 }
 
 export function getMaterialSetters(type: string) {
-  return settersMap.get(type)
+  return materialMap.get(type)?.setters || []
+}
+
+export function getMaterialEventOptions(type: string) {
+  return materialMap.get(type)?.eventOptions || []
 }
 // 创建节点函数
 export function createNode(node) {

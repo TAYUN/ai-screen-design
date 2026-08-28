@@ -23,6 +23,24 @@ const textMaterial: MaterialDefinition = {
       key: 'style.fontSize',
     },
   ],
+  eventOptions: [
+    {
+      label: '事件',
+      value: 'click',
+    },
+    {
+      label: '双击事件',
+      value: 'dblclick',
+    },
+    {
+      label: '组件挂载',
+      value: 'vnodeMounted',
+    },
+    {
+      label: 'foo',
+      value: 'foo',
+    },
+  ],
   schema: {
     type: 'text',
     name: '文本',
