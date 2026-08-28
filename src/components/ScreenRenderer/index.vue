@@ -11,6 +11,7 @@
 <script setup lang="ts">
 import { getMaterialComponent } from '@/materials'
 import { createRuntimeContext } from '@/runtime/context'
+import { runSandbox } from '@/runtime/sandbox'
 import type { MaterialSchema } from '@/schema/material'
 import type { PageSchema } from '@/schema/page'
 
@@ -90,9 +91,12 @@ function createEvents(node: MaterialSchema) {
       return
     }
     event.handle = listeners[event.type] = (payload) => {
-      const fn = new Function('$context', '$node', '$payload', event.code)
-      // 执行创建的函数
-      fn(context, node, payload)
+      // 1. 不使用沙箱会有安全问题
+      // const fn = new Function('$context', '$node', '$payload', event.code)
+      // // 执行创建的函数
+      // fn(context, node, payload)
+      // 2. 使用沙箱
+      runSandbox(event.code, { $context: context, $node: node, $payload: payload })
     }
   })
   return listeners
