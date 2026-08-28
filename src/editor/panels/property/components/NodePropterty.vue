@@ -5,6 +5,7 @@ import { storeToRefs } from 'pinia'
 
 import FormCreate from './FormCreate.vue'
 import DataSource from './DataSource.vue'
+import NodeEvents from './nodeEvents.vue'
 defineOptions({
   name: 'NodeProperty',
 })
@@ -44,11 +45,13 @@ const layoutSetters = [
 ]
 const activeTab = ref('property')
 const active = ref('node')
-const visiable = ref(false)
+const jsonVisible = ref(false)
+const eventVisible = ref(false)
 const jsonText = ref('')
+const nodeEvents = useTemplateRef('nodeEvents')
 function previewJson() {
   jsonText.value = JSON.stringify(selectedNode.value, null, 2)
-  visiable.value = true
+  jsonVisible.value = true
 }
 
 function onConfirm() {
@@ -62,7 +65,12 @@ function onConfirm() {
     type: selectedNode.value.type,
   })
   // 关闭抽屉
-  visiable.value = false
+  jsonVisible.value = false
+}
+
+function onConfirmEvent() {
+  nodeEvents.value.save()
+  eventVisible.value = false
 }
 </script>
 
@@ -70,9 +78,19 @@ function onConfirm() {
   <div class="node-property container">
     <div class="node-title">
       <span>{{ selectedNode.name }}</span>
-      <button type="button" class="cursor-pointer" aria-label="json" @click="previewJson">
-        <Icon icon="ri:braces-line" />
-      </button>
+      <div class="flex gap-20">
+        <button
+          type="button"
+          class="cursor-pointer"
+          aria-label="event"
+          @click="eventVisible = true"
+        >
+          <Icon icon="ri:braces-line" />
+        </button>
+        <button type="button" class="cursor-pointer" aria-label="json" @click="previewJson">
+          <Icon icon="ri:braces-line" />
+        </button>
+      </div>
     </div>
     <el-tabs v-model="activeTab" stretch>
       <el-tab-pane label="属性" name="property">
@@ -89,15 +107,22 @@ function onConfirm() {
         <DataSource />
       </el-tab-pane>
     </el-tabs>
-
-    <el-drawer :destroy-on-close="true" v-model="visiable" title="编辑 JSON" size="800">
+    <!-- 预览json -->
+    <el-drawer :destroy-on-close="true" v-model="jsonVisible" title="编辑 JSON" size="800">
       <MonacoEditor v-model="jsonText" />
-
       <template #footer>
-        <el-button @click="visiable = false">取消</el-button>
+        <el-button @click="jsonVisible = false">取消</el-button>
         <el-button type="primary" @click="onConfirm">确认</el-button>
       </template>
     </el-drawer>
+    <!-- 事件配置 -->
+    <el-dialog destroy-on-close title="事件配置" width="800" v-model="eventVisible">
+      <NodeEvents ref="nodeEvents" />
+      <template #footer>
+        <el-button @click="eventVisible = false">取消</el-button>
+        <el-button type="primary" @click="onConfirmEvent">确认</el-button>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
