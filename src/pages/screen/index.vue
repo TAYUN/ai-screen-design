@@ -11,7 +11,7 @@ const route = useRoute()
 /**
  * 从 localStorage 中获取配置，工作中是从后台中获取配置
  */
-const page = getPublishPage(route.query.id)
+const page = getPublishPage(route.query.id as string)
 </script>
 
 <template>

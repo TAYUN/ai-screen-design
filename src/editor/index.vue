@@ -16,11 +16,11 @@ defineOptions({
 const editStore = useEditorStore()
 
 const route = useRoute()
-
+// /preview?id=1&id=2 query: {id: [1, 2]}
 const pageId = route.query.id
 if (pageId) {
   // 如果pageId有，去查询数据库（localStorage）
-  const page = getPublishPage(pageId)
+  const page = getPublishPage(pageId as string)
   editStore.setPage(page)
 }
 
