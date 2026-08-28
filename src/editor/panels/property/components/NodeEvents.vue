@@ -3,6 +3,7 @@ import type { MaterialEvent } from '@/schema/material'
 import { useEditorStore } from '@/stores/editor'
 import { deepClone } from '@/utils'
 import { Icon } from '@iconify/vue'
+import { ElMessage } from 'element-plus'
 import { storeToRefs } from 'pinia'
 
 defineOptions({
@@ -10,11 +11,28 @@ defineOptions({
 })
 
 const editorStore = useEditorStore()
-const { selectedNode } = storeToRefs(editorStore)
+const { selectedNode, nodes } = storeToRefs(editorStore)
 /**
  * 深拷贝
  */
 const data = ref(deepClone(selectedNode.value.events || []))
+
+const dispatchEvent = ref()
+const dispatchOptions = computed(() => {
+  return nodes.value.map((node) => {
+    return {
+      label: node.name,
+      value: node.id,
+      children: node.events?.map((event) => {
+        return {
+          label: event.title,
+          value: event.name,
+        }
+      }),
+    }
+  })
+})
+
 const activeEvent = ref()
 function selectEvent(event: MaterialEvent) {
   activeEvent.value = event
@@ -37,6 +55,22 @@ function removeEvent(name: string) {
   selectEvent(null)
 }
 
+async function copyNodeId(id: string) {
+  /**
+   * navigator 只支持https或者开发环境使用
+   */
+  await navigator.clipboard.writeText(id)
+  ElMessage.success('复制成功')
+}
+function inserDispatchCode(values: string[]) {
+  const [id, name] = values
+  const code = `\n$context.dispatch('${id}', '${name}')`
+  activeEvent.value.code += code
+  nextTick(() => {
+    // 延后赋值，否则被级联选择器内部覆盖
+    dispatchEvent.value = undefined
+  })
+}
 defineExpose({
   save() {
     // selectedNode.value.events = data.value
@@ -67,6 +101,23 @@ defineExpose({
     </div>
     <div class="node-event-content">
       <el-form v-if="activeEvent">
+        <div class="flex gap-20 mb-20">
+          <el-select class="flex-1" placeholder="复制节点 ID" @change="copyNodeId">
+            <el-option
+              v-for="node in nodes"
+              :key="node.id"
+              :value="node.id"
+              :label="node.name"
+            ></el-option>
+          </el-select>
+          <el-cascader
+            class="flex-1"
+            placeholder="触发事件"
+            :options="dispatchOptions"
+            @change="inserDispatchCode"
+            v-model="dispatchEvent"
+          ></el-cascader>
+        </div>
         <el-form-item label="标题">
           <el-input v-model="activeEvent.title" />
         </el-form-item>
