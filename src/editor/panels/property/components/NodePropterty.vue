@@ -85,7 +85,7 @@ function onConfirmEvent() {
           aria-label="event"
           @click="eventVisible = true"
         >
-          <Icon icon="ri:braces-line" />
+          <Icon icon="ri:flashlight-line" />
         </button>
         <button type="button" class="cursor-pointer" aria-label="json" @click="previewJson">
           <Icon icon="ri:braces-line" />

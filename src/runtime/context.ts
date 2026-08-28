@@ -44,6 +44,8 @@ interface RuntimeContext {
    */
 
   refreshNodesByDataId(dataId: string, ...args: unknown[]): void
+
+  dispatch(id: string, name: string, payload?: unknown): void
 }
 
 export function createRuntimeContext(page: Ref<PageSchema>): RuntimeContext {
@@ -89,6 +91,20 @@ export function createRuntimeContext(page: Ref<PageSchema>): RuntimeContext {
     })
   }
 
+  const dispatch: RuntimeContext['dispatch'] = (id, name, payload) => {
+    // 执行事件
+    const node = getNode(id)
+    if (!node) {
+      console.warn(`没有找到${id}节点`)
+      return
+    }
+    const event = node.events?.find((event) => event.name === name)
+    if (event) {
+      // 找到事件了，就执行
+      event.handle?.(payload)
+    }
+  }
+
   return {
     getNode,
     setAttribute,
@@ -97,5 +113,6 @@ export function createRuntimeContext(page: Ref<PageSchema>): RuntimeContext {
     registerNodeInstance,
     trigger,
     refreshNodesByDataId,
+    dispatch,
   }
 }

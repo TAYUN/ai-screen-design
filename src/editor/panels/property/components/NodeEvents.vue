@@ -23,7 +23,8 @@ function selectEvent(event: MaterialEvent) {
 function onAdd() {
   // 新增数据源
   data.value.push({
-    name: '未命名',
+    name: 'click',
+    title: '未命名',
     type: '',
     code: '',
   })
@@ -54,17 +55,21 @@ defineExpose({
       <el-button type="primary" @click="onAdd" size="small">新增</el-button>
       <div
         class="node-event-item"
-        :class="{ active: item.name === activeEvent?.name }"
+        :class="{ active: item.title === activeEvent?.title }"
         v-for="item in data"
         :key="item.name"
         @click="selectEvent(item)"
       >
-        <span>{{ item.name }}</span>
-        <span @click.stop="removeEvent(item.name)"><Icon icon="ri:delete-bin-line" /></span>
+        <!-- 左侧显示title -->
+        <span>{{ item.title }}</span>
+        <span @click.stop="removeEvent(item.title)"><Icon icon="ri:delete-bin-line" /></span>
       </div>
     </div>
     <div class="node-event-content">
       <el-form v-if="activeEvent">
+        <el-form-item label="标题">
+          <el-input v-model="activeEvent.title" />
+        </el-form-item>
         <el-form-item label="名称">
           <el-input v-model="activeEvent.name" />
         </el-form-item>
@@ -73,7 +78,9 @@ defineExpose({
         </el-form-item>
         <el-form-item label="函数体">
           <div class="flex flex-col w-full bg-[#1e1e1e]">
-            <div class="flex-none pl-30">function() {</div>
+            <div class="flex-none pl-30">
+              function {{ activeEvent.name }} ($context, $node, $payload) {
+            </div>
             <monaco-editor class="flex-1" v-model="activeEvent.code" lang="javascript" />
             <div class="flex-none pl-30">}</div>
           </div>

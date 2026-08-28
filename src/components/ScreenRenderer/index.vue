@@ -84,10 +84,15 @@ function createEvents(node: MaterialSchema) {
   const listeners = {}
   const events = node.events || []
   events.forEach((event) => {
-    listeners[event.type] = () => {
-      const fn = new Function('$context', '$node', event.code)
+    if (event.handle) {
+      // 第二次了，不需要赋值了
+      listeners[event.type] = event.handle
+      return
+    }
+    event.handle = listeners[event.type] = (payload) => {
+      const fn = new Function('$context', '$node', '$payload', event.code)
       // 执行创建的函数
-      fn(context, node)
+      fn(context, node, payload)
     }
   })
   return listeners

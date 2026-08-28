@@ -24,6 +24,15 @@ export interface MaterialEvent {
    * fn(123456)
    */
   code: string
+  /**
+   * 事件标题
+   */
+  title: string
+
+  /**
+   * 最终根据code 生成的函数
+   */
+  handle?: (...args: unknown[]) => unknown
 }
 
 export interface MaterialSchema {
