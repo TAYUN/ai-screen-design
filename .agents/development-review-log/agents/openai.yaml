@@ -1,6 +1,0 @@
-interface:
-  display_name: "开发评审日志"
-  short_description: "评审代码改动并维护功能阶段开发日志"
-  default_prompt: "Use $development-review-log to review the current repository changes and append the findings to the correct feature development log."
-policy:
-  allow_implicit_invocation: true
